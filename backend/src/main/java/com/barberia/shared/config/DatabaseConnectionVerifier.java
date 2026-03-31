@@ -30,7 +30,7 @@ public class DatabaseConnectionVerifier implements CommandLineRunner {
             System.err.println("❌ ERROR EN LA CONEXIÓN A LA BASE DE DATOS");
             System.err.println("❌ Mensaje: " + e.getMessage());
             System.err.println("❌ ============================================\n");
-            throw e;
+            // No lanzamos la excepción para permitir que la app continúe
         }
     }
 }

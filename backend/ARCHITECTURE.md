@@ -39,33 +39,34 @@ backend/src/main/java/com/barberia/
 │
 ├── modules/                         ← Módulos específicos
 │   │
-│   ├── modulo1/                     ← Primer módulo
+│   ├── modulo_usuarios/             ← Gestión de Usuarios
 │   │   ├── controllers/
-│   │   │   └── ServicioController.java
+│   │   │   └── UsuarioController.java
 │   │   ├── services/
-│   │   │   └── ServicioService.java
+│   │   │   └── UsuarioService.java
 │   │   ├── repositories/
-│   │   │   └── ServicioRepository.java
+│   │   │   └── UsuarioRepository.java
 │   │   └── models/
 │   │       ├── entities/
-│   │       │   └── Servicio.java
+│   │       │   └── Usuario.java
 │   │       └── dtos/
-│   │           └── ServicioDTO.java
+│   │           └── UsuarioDTO.java
 │   │
-│   ├── modulo2/                     ← Segundo módulo
+│   ├── modulo_auth/                 ← Autenticación y Autorización
 │   │   ├── controllers/
-│   │   │   └── ClienteController.java
+│   │   │   └── AuthController.java
 │   │   ├── services/
-│   │   │   └── ClienteService.java
+│   │   │   └── AuthService.java
 │   │   ├── repositories/
-│   │   │   └── ClienteRepository.java
+│   │   │   └── (usa UsuarioRepository del modulo_usuarios)
 │   │   └── models/
 │   │       ├── entities/
-│   │       │   └── Cliente.java
+│   │       │   └── Token.java
 │   │       └── dtos/
-│   │           └── ClienteDTO.java
+│   │           ├── LoginDTO.java
+│   │           └── TokenDTO.java
 │   │
-│   └── modulo3/                     ← Próximos módulos
+│   └── modulo_servicios/            ← Próximos módulos
 │       └── ... (misma estructura)
 │
 └── BarberiServiceApplication.java   ← Punto de entrada
@@ -202,12 +203,12 @@ public class ServicioController {
 
 ## Creando un Nuevo Módulo
 
-Imagina que quieres crear un módulo `modulo3` para gestionar **Citas**:
+Imagina que quieres crear un módulo `modulo_servicios` para gestionar **Servicios de Barbería** (cortes, afeitados, etc):
 
 ### Paso 1: Crear la estructura de carpetas
 
 ```
-modules/modulo3/
+modules/modulo_servicios/
 ├── controllers/
 ├── services/
 ├── repositories/
@@ -219,70 +220,104 @@ modules/modulo3/
 ### Paso 2: Crear la Entity
 
 ```java
-// modules/modulo3/models/entities/Cita.java
+// modules/modulo_servicios/models/entities/Servicio.java
 @Entity
-@Table(name = "citas")
+@Table(name = "servicios")
 @Data
-public class Cita {
+@Builder
+@NoArgsConstructor
+@AllArgsConstructor
+public class Servicio {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
     
-    @Column(nullable = false)
-    private LocalDateTime fechaHora;
+    @Column(nullable = false, unique = true)
+    private String nombre;
     
-    private String notas;
+    @Column
+    private String descripcion;
     
     @Column(nullable = false)
-    private Boolean confirmada = false;
+    private BigDecimal precio;
+    
+    @Column
+    private Integer duracionMinutos;
+    
+    @Column(nullable = false)
+    private Boolean activo = true;
+    
+    @Column(name = "created_at", nullable = false, updatable = false)
+    private LocalDateTime creadoEn = LocalDateTime.now();
 }
 ```
 
 ### Paso 3: Crear el DTO
 
 ```java
-// modules/modulo3/models/dtos/CitaDTO.java
+// modules/modulo_servicios/models/dtos/ServicioDTO.java
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
-public class CitaDTO {
+public class ServicioDTO {
     private Long id;
-    private LocalDateTime fechaHora;
-    private String notas;
-    private Boolean confirmada;
+    private String nombre;
+    private String descripcion;
+    private BigDecimal precio;
+    private Integer duracionMinutos;
+    private Boolean activo;
 }
 ```
 
 ### Paso 4: Crear el Repository
 
 ```java
-// modules/modulo3/repositories/CitaRepository.java
+// modules/modulo_servicios/repositories/ServicioRepository.java
 @Repository
-public interface CitaRepository extends JpaRepository<Cita, Long> {
-    List<Cita> findByFechaHoraBetween(LocalDateTime inicio, LocalDateTime fin);
-    List<Cita> findByConfirmadaTrue();
+public interface ServicioRepository extends JpaRepository<Servicio, Long> {
+    List<Servicio> findByActivoTrue();
+    Optional<Servicio> findByNombreIgnoreCase(String nombre);
+    List<Servicio> findByPrecioBetween(BigDecimal min, BigDecimal max);
 }
 ```
 
 ### Paso 5: Crear el Service
 
 ```java
-// modules/modulo3/services/CitaService.java
+// modules/modulo_servicios/services/ServicioService.java
 @Service
-public class CitaService {
+public class ServicioService {
     @Autowired
-    private CitaRepository citaRepository;
+    private ServicioRepository servicioRepository;
     
-    public List<CitaDTO> obtenerCitasConfirmadas() {
-        return citaRepository.findByConfirmadaTrue()
+    public List<ServicioDTO> obtenerTodosLosServicios() {
+        return servicioRepository.findByActivoTrue()
             .stream()
             .map(this::convertirADTO)
             .collect(Collectors.toList());
     }
     
-    private CitaDTO convertirADTO(Cita cita) {
-        return new CitaDTO(cita.getId(), cita.getFechaHora(), 
-                          cita.getNotas(), cita.getConfirmada());
+    public Optional<ServicioDTO> obtenerPorId(Long id) {
+        return servicioRepository.findById(id)
+            .map(this::convertirADTO);
+    }
+    
+    public ServicioDTO crearServicio(ServicioDTO servicioDTO) {
+        Servicio servicio = Servicio.builder()
+            .nombre(servicioDTO.getNombre())
+            .descripcion(servicioDTO.getDescripcion())
+            .precio(servicioDTO.getPrecio())
+            .duracionMinutos(servicioDTO.getDuracionMinutos())
+            .activo(true)
+            .build();
+        Servicio guardado = servicioRepository.save(servicio);
+        return convertirADTO(guardado);
+    }
+    
+    private ServicioDTO convertirADTO(Servicio servicio) {
+        return new ServicioDTO(servicio.getId(), servicio.getNombre(),
+            servicio.getDescripcion(), servicio.getPrecio(),
+            servicio.getDuracionMinutos(), servicio.getActivo());
     }
 }
 ```
@@ -290,19 +325,36 @@ public class CitaService {
 ### Paso 6: Crear el Controller
 
 ```java
-// modules/modulo3/controllers/CitaController.java
+// modules/modulo_servicios/controllers/ServicioController.java
 @RestController
-@RequestMapping("/api/citas")
-public class CitaController {
+@RequestMapping("/api/servicios")
+public class ServicioController {
     @Autowired
-    private CitaService citaService;
+    private ServicioService servicioService;
     
     @GetMapping
-    public ResponseEntity<ApiResponse<List<CitaDTO>>> obtenerTodas() {
-        List<CitaDTO> citas = citaService.obtenerCitasConfirmadas();
+    public ResponseEntity<ApiResponse<List<ServicioDTO>>> obtenerTodos() {
+        List<ServicioDTO> servicios = servicioService.obtenerTodosLosServicios();
         return ResponseEntity.ok(
-            ApiResponse.success("Citas obtenidas", citas)
+            ApiResponse.success("Servicios obtenidos correctamente", servicios)
         );
+    }
+    
+    @GetMapping("/{id}")
+    public ResponseEntity<ApiResponse<ServicioDTO>> obtenerPorId(@PathVariable Long id) {
+        return servicioService.obtenerPorId(id)
+            .map(servicio -> ResponseEntity.ok(
+                ApiResponse.success("Servicio obtenido", servicio)
+            ))
+            .orElse(ResponseEntity.status(HttpStatus.NOT_FOUND)
+                .body(ApiResponse.error("Servicio no encontrado")));
+    }
+    
+    @PostMapping
+    public ResponseEntity<ApiResponse<ServicioDTO>> crear(@RequestBody ServicioDTO servicioDTO) {
+        ServicioDTO creado = servicioService.crearServicio(servicioDTO);
+        return ResponseEntity.status(HttpStatus.CREATED)
+            .body(ApiResponse.success("Servicio creado", creado));
     }
 }
 ```
@@ -313,12 +365,13 @@ public class CitaController {
 
 | Componente | Patrón | Ejemplo |
 |-----------|--------|---------|
-| Entity | `{Nombre}` | `Servicio`, `Cliente`, `Cita` |
-| DTO | `{Nombre}DTO` | `ServicioDTO`, `ClienteDTO` |
-| Repository | `{Nombre}Repository` | `ServicioRepository` |
-| Service | `{Nombre}Service` | `ServicioService` |
-| Controller | `{Nombre}Controller` | `ServicioController` |
-| Package | `com.barberia.modules.{modulo}.{capa}` | `com.barberia.modules.modulo1.controllers` |
+| Entity | `{Nombre}` | `Usuario`, `Servicio`, `Token` |
+| DTO | `{Nombre}DTO` | `UsuarioDTO`, `ServicioDTO`, `LoginDTO` |
+| Repository | `{Nombre}Repository` | `UsuarioRepository`, `ServicioRepository` |
+| Service | `{Nombre}Service` | `UsuarioService`, `ServicioService` |
+| Controller | `{Nombre}Controller` | `UsuarioController`, `ServicioController` |
+| Package | `com.barberia.modules.{modulo}.{capa}` | `com.barberia.modules.modulo_usuarios.controllers` |
+| Módulo | `modulo_{nombre}` | `modulo_usuarios`, `modulo_auth`, `modulo_servicios` |
 
 ### Flujo de Desarrollo
 

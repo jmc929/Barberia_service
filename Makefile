@@ -15,12 +15,12 @@ dev:
 	@echo "✅ Compilación exitosa"
 	@echo "🚀 Iniciando Barberia Backend en http://localhost:8080/api/"
 	@echo ""
-	@cd backend && java -jar target/barberia-service-1.0.0.jar
+	@./run-dev.sh
 
 run:
 	@echo "🚀 Iniciando Barberia Backend en http://localhost:8080/api/"
 	@echo ""
-	@cd backend && java -jar target/barberia-service-1.0.0.jar
+	@./run-dev.sh
 
 build:
 	@echo "🔨 Compilando proyecto..."

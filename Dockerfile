@@ -21,10 +21,5 @@ COPY --from=builder /app/target/barberia-service-1.0.0.jar .
 # Exponer puerto
 EXPOSE 8080
 
-# Variables de entorno (pueden ser sobrescritas)
-ENV SPRING_DATASOURCE_URL=jdbc:postgresql://db.wacfhjygmoagyegzupuz.supabase.co:5432/postgres
-ENV SPRING_DATASOURCE_USERNAME=postgres
-ENV SPRING_DATASOURCE_PASSWORD=fabricaudeA123*
-
 # Ejecutar la aplicación
 ENTRYPOINT ["java", "-jar", "barberia-service-1.0.0.jar"]
