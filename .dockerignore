@@ -1,0 +1,12 @@
+target/
+.git/
+.gitignore
+.DS_Store
+*.swp
+*.swo
+*~
+.vscode/
+.gradle/
+build/
+node_modules/
+.env.local
