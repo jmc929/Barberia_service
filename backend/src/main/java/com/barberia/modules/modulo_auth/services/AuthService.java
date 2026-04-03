@@ -40,7 +40,7 @@ public class AuthService {
         }
 
         // Generar JWT token
-        String token = jwtTokenProvider.generateToken(usuario.getEmail(), usuario.getId());
+        String token = jwtTokenProvider.generateToken(usuario.getEmail(), usuario.getNumeroDocumento());
 
         return LoginResponseDTO.builder()
             .token(token)
@@ -54,7 +54,6 @@ public class AuthService {
      */
     private UsuarioDTO convertirADTO(Usuario usuario) {
         return UsuarioDTO.builder()
-            .id(usuario.getId())
             .numeroDocumento(usuario.getNumeroDocumento())
             .numeroCelular(usuario.getNumeroCelular())
             .email(usuario.getEmail())
@@ -62,7 +61,6 @@ public class AuthService {
             .idEstado(usuario.getIdEstado())
             .idRol(usuario.getIdRol())
             .fechaRegistro(usuario.getFechaRegistro())
-            .ultimoAcceso(usuario.getUltimoAcceso())
             .build();
     }
 }

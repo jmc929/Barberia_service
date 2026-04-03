@@ -26,13 +26,13 @@ public class JwtTokenProvider {
     /**
      * Genera un JWT token para un usuario
      */
-    public String generateToken(String email, Long userId) {
+    public String generateToken(String email, String numeroDocumento) {
         Date now = new Date();
         Date expiryDate = new Date(now.getTime() + jwtExpiration);
 
         return Jwts.builder()
             .setSubject(email)
-            .claim("userId", userId)
+            .claim("numeroDocumento", numeroDocumento)
             .setIssuedAt(now)
             .setExpiration(expiryDate)
             .signWith(getSigningKey(), SignatureAlgorithm.HS512)
@@ -48,11 +48,11 @@ public class JwtTokenProvider {
     }
 
     /**
-     * Obtiene el userId del token
+     * Obtiene el numeroDocumento del token
      */
-    public Long getUserIdFromToken(String token) {
+    public String getNumeroDocumentoFromToken(String token) {
         Claims claims = getAllClaimsFromToken(token);
-        return claims.get("userId", Long.class);
+        return claims.get("numeroDocumento", String.class);
     }
 
     /**

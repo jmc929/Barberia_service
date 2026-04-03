@@ -37,21 +37,6 @@ public class UsuarioController {
     }
 
     /**
-     * GET /api/personas/{id}
-     * Obtiene una persona por ID
-     */
-    @GetMapping("/{id}")
-    public ResponseEntity<ApiResponse<UsuarioDTO>> obtenerPorId(@PathVariable Long id) {
-        try {
-            UsuarioDTO persona = usuarioService.obtenerPorId(id);
-            return ResponseEntity.ok(ApiResponse.success("Persona obtenida", persona));
-        } catch (Exception e) {
-            return ResponseEntity.status(HttpStatus.NOT_FOUND)
-                .body(ApiResponse.error(e.getMessage()));
-        }
-    }
-
-    /**
      * GET /api/personas/documento/{numeroDocumento}
      * Obtiene una persona por número de documento
      */

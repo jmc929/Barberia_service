@@ -11,7 +11,6 @@ import java.time.LocalDateTime;
 @NoArgsConstructor
 @AllArgsConstructor
 public class UsuarioDTO {
-    private Long id;
     private String numeroDocumento;
     private String numeroCelular;
     private String email;
@@ -19,5 +18,4 @@ public class UsuarioDTO {
     private Integer idEstado;
     private Integer idRol;
     private LocalDateTime fechaRegistro;
-    private LocalDateTime ultimoAcceso;
 }

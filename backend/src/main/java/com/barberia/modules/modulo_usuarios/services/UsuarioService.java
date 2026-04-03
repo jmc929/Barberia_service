@@ -9,7 +9,6 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
-import java.time.LocalDateTime;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -84,15 +83,6 @@ public class UsuarioService {
     }
 
     /**
-     * Obtiene una persona por su ID
-     */
-    public UsuarioDTO obtenerPorId(Long id) {
-        Usuario usuario = usuarioRepository.findById(id)
-            .orElseThrow(() -> new ResourceNotFoundException("Persona no encontrada con id: " + id));
-        return convertirADTO(usuario);
-    }
-
-    /**
      * Obtiene todas las personas
      */
     public List<UsuarioDTO> obtenerTodas() {
@@ -107,7 +97,6 @@ public class UsuarioService {
      */
     private UsuarioDTO convertirADTO(Usuario usuario) {
         return UsuarioDTO.builder()
-            .id(usuario.getId())
             .numeroDocumento(usuario.getNumeroDocumento())
             .numeroCelular(usuario.getNumeroCelular())
             .email(usuario.getEmail())
@@ -115,7 +104,6 @@ public class UsuarioService {
             .idEstado(usuario.getIdEstado())
             .idRol(usuario.getIdRol())
             .fechaRegistro(usuario.getFechaRegistro())
-            .ultimoAcceso(usuario.getUltimoAcceso())
             .build();
     }
 }

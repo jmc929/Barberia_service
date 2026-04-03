@@ -17,10 +17,7 @@ import java.time.LocalDateTime;
 public class Usuario {
 
     @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Long id;
-
-    @Column(name = "numero_documento", nullable = false, unique = true, length = 20)
+    @Column(name = "numero_documento", length = 20)
     private String numeroDocumento;
 
     @Column(name = "numero_celular", nullable = false, length = 20)
@@ -46,8 +43,6 @@ public class Usuario {
     @Column(name = "fecha_registro", nullable = false, updatable = false)
     private LocalDateTime fechaRegistro;
 
-    @Column(name = "ultimo_acceso")
-    private LocalDateTime ultimoAcceso;
 
     @PrePersist
     protected void onCreate() {
