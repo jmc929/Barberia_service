@@ -1,0 +1,20 @@
+services:
+  - type: web
+    name: barberia-api
+    runtime: docker
+    dockerfilePath: ./Dockerfile
+    port: 8080
+    healthCheckPath: /api/health
+    envVars:
+      - key: SPRING_DATASOURCE_URL
+        scope: run
+        value: jdbc:postgresql://[tu-host]:[puerto]/[db]
+      - key: SPRING_DATASOURCE_USERNAME
+        scope: run
+        value: [tu-usuario]
+      - key: SPRING_DATASOURCE_PASSWORD
+        scope: run
+        value: ${SPRING_DATASOURCE_PASSWORD}
+      - key: JWT_SECRET
+        scope: run
+        value: ${JWT_SECRET}
