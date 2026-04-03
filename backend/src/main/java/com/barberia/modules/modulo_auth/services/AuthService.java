@@ -40,7 +40,7 @@ public class AuthService {
         }
 
         // Generar JWT token
-        String token = jwtTokenProvider.generateToken(usuario.getEmail(), usuario.getNumeroDocumento());
+        String token = jwtTokenProvider.generateToken(usuario.getEmail(), usuario.getNumeroDocumento(), usuario.getIdRol());
 
         return LoginResponseDTO.builder()
             .token(token)

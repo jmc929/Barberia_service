@@ -34,8 +34,6 @@ public class SecurityConfig {
                 .requestMatchers("POST", "/api/personas/registro").permitAll()
                 // Permitir login sin autenticación
                 .requestMatchers("POST", "/api/auth/login").permitAll()
-                // Permitir ver lista de clientes sin autenticación
-                .requestMatchers("GET", "/api/personas").permitAll()
                 // Permitir documentación Swagger sin auth
                 .requestMatchers("/api/swagger-ui.html", "/api/swagger-ui/**", "/api/v3/api-docs", "/api/v3/api-docs/**").permitAll()
                 .requestMatchers("/swagger-ui.html", "/swagger-ui/**", "/v3/api-docs", "/v3/api-docs/**").permitAll()

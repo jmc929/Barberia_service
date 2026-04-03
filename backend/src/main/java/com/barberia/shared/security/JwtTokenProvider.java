@@ -26,13 +26,14 @@ public class JwtTokenProvider {
     /**
      * Genera un JWT token para un usuario
      */
-    public String generateToken(String email, String numeroDocumento) {
+    public String generateToken(String email, String numeroDocumento, Integer idRol) {
         Date now = new Date();
         Date expiryDate = new Date(now.getTime() + jwtExpiration);
 
         return Jwts.builder()
             .setSubject(email)
             .claim("numeroDocumento", numeroDocumento)
+            .claim("idRol", idRol)
             .setIssuedAt(now)
             .setExpiration(expiryDate)
             .signWith(getSigningKey(), SignatureAlgorithm.HS512)
@@ -53,6 +54,14 @@ public class JwtTokenProvider {
     public String getNumeroDocumentoFromToken(String token) {
         Claims claims = getAllClaimsFromToken(token);
         return claims.get("numeroDocumento", String.class);
+    }
+
+    /**
+     * Obtiene el idRol del token
+     */
+    public Integer getRolFromToken(String token) {
+        Claims claims = getAllClaimsFromToken(token);
+        return claims.get("idRol", Integer.class);
     }
 
     /**

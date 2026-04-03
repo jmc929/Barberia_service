@@ -7,6 +7,7 @@ import com.barberia.shared.utils.ApiResponse;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -39,8 +40,10 @@ public class UsuarioController {
     /**
      * GET /api/personas/documento/{numeroDocumento}
      * Obtiene una persona por número de documento
+     * Requiere: Rol Administrador (idRol = 1)
      */
     @GetMapping("/documento/{numeroDocumento}")
+    @PreAuthorize("hasAuthority('ROLE_1')")
     public ResponseEntity<ApiResponse<UsuarioDTO>> obtenerPorDocumento(@PathVariable String numeroDocumento) {
         try {
             UsuarioDTO persona = usuarioService.obtenerPorNumeroDocumento(numeroDocumento);
@@ -54,8 +57,10 @@ public class UsuarioController {
     /**
      * GET /api/personas/email/{email}
      * Obtiene una persona por email
+     * Requiere: Rol Administrador (idRol = 1)
      */
     @GetMapping("/email/{email}")
+    @PreAuthorize("hasAuthority('ROLE_1')")
     public ResponseEntity<ApiResponse<UsuarioDTO>> obtenerPorEmail(@PathVariable String email) {
         try {
             UsuarioDTO persona = usuarioService.obtenerPorEmail(email);
@@ -69,8 +74,10 @@ public class UsuarioController {
     /**
      * GET /api/personas
      * Obtiene todas las personas
+     * Requiere: Rol Administrador (idRol = 1)
      */
     @GetMapping
+    @PreAuthorize("hasAuthority('ROLE_1')")
     public ResponseEntity<ApiResponse<List<UsuarioDTO>>> obtenerTodas() {
         List<UsuarioDTO> personas = usuarioService.obtenerTodas();
         return ResponseEntity.ok(ApiResponse.success("Personas obtenidas", personas));
