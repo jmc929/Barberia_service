@@ -72,6 +72,18 @@ public class UsuarioController {
     }
 
     /**
+     * GET /api/personas/barberos
+     * Obtiene todos los usuarios con rol barbero (idRol = 2)
+     * Requiere: Rol Administrador (idRol = 1)
+     */
+    @GetMapping("/barberos")
+    @PreAuthorize("hasAuthority('ROLE_1')")
+    public ResponseEntity<ApiResponse<List<UsuarioDTO>>> obtenerBarberos() {
+        List<UsuarioDTO> barberos = usuarioService.obtenerBarberos();
+        return ResponseEntity.ok(ApiResponse.success("Barberos obtenidos", barberos));
+    }
+
+    /**
      * GET /api/personas
      * Obtiene todas las personas
      * Requiere: Rol Administrador (idRol = 1)
@@ -81,6 +93,25 @@ public class UsuarioController {
     public ResponseEntity<ApiResponse<List<UsuarioDTO>>> obtenerTodas() {
         List<UsuarioDTO> personas = usuarioService.obtenerTodas();
         return ResponseEntity.ok(ApiResponse.success("Personas obtenidas", personas));
+    }
+
+    /**
+     * PUT /api/personas/{numeroDocumento}/rol
+     * Cambia el rol de un usuario
+     * Requiere: Rol Administrador (idRol = 1)
+     */
+    @PutMapping("/{numeroDocumento}/rol")
+    @PreAuthorize("hasAuthority('ROLE_1')")
+    public ResponseEntity<ApiResponse<UsuarioDTO>> cambiarRol(
+            @PathVariable String numeroDocumento,
+            @RequestParam Integer nuevoRol) {
+        try {
+            UsuarioDTO usuario = usuarioService.cambiarRol(numeroDocumento, nuevoRol);
+            return ResponseEntity.ok(ApiResponse.success("Rol actualizado exitosamente", usuario));
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND)
+                .body(ApiResponse.error(e.getMessage()));
+        }
     }
 }
 
