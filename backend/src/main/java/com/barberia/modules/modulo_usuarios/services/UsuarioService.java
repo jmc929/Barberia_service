@@ -93,6 +93,27 @@ public class UsuarioService {
     }
 
     /**
+     * Obtiene todos los barberos (idRol = 2)
+     */
+    public List<UsuarioDTO> obtenerBarberos() {
+        return usuarioRepository.findByIdRol(2)
+            .stream()
+            .map(this::convertirADTO)
+            .collect(Collectors.toList());
+    }
+
+    /**
+     * Cambia el rol de un usuario
+     */
+    public UsuarioDTO cambiarRol(String numeroDocumento, Integer nuevoRol) {
+        Usuario usuario = usuarioRepository.findByNumeroDocumento(numeroDocumento)
+            .orElseThrow(() -> new ResourceNotFoundException("Persona no encontrada con documento: " + numeroDocumento));
+
+        usuario.setIdRol(nuevoRol);
+        return convertirADTO(usuarioRepository.save(usuario));
+    }
+
+    /**
      * Convierte una Entity Usuario a DTO (sin exponer contraseña hasheada)
      */
     private UsuarioDTO convertirADTO(Usuario usuario) {
