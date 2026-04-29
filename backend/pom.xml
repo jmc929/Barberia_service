@@ -92,20 +92,6 @@
             <scope>runtime</scope>
         </dependency>
 
-        <!-- Hibernate Types for JSONB support -->
-        <dependency>
-            <groupId>io.hypersistence</groupId>
-            <artifactId>hypersistence-utils-hibernate-60</artifactId>
-            <version>3.7.0</version>
-        </dependency>
-
-        <!-- Flyway for Database Migration -->
-        <dependency>
-            <groupId>org.flywaydb</groupId>
-            <artifactId>flyway-core</artifactId>
-            <version>9.22.3</version>
-        </dependency>
-
         <!-- Spring Boot Test -->
         <dependency>
             <groupId>org.springframework.boot</groupId>
