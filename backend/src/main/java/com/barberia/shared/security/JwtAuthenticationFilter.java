@@ -13,7 +13,9 @@ import org.springframework.web.filter.OncePerRequestFilter;
 
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 public class JwtAuthenticationFilter extends OncePerRequestFilter {
 
@@ -28,16 +30,21 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
 
             if (StringUtils.hasText(jwt) && jwtTokenProvider.validateToken(jwt)) {
                 String email = jwtTokenProvider.getEmailFromToken(jwt);
+                String numeroDocumento = jwtTokenProvider.getNumeroDocumentoFromToken(jwt);
                 Integer idRol = jwtTokenProvider.getRolFromToken(jwt);
 
-                // Crear lista de autoridades basada en el rol
                 List<SimpleGrantedAuthority> authorities = new ArrayList<>();
                 if (idRol != null) {
                     authorities.add(new SimpleGrantedAuthority("ROLE_" + idRol));
                 }
 
-                UsernamePasswordAuthenticationToken authentication = 
+                UsernamePasswordAuthenticationToken authentication =
                     new UsernamePasswordAuthenticationToken(email, null, authorities);
+
+                Map<String, Object> details = new HashMap<>();
+                details.put("numeroDocumento", numeroDocumento);
+                authentication.setDetails(details);
+
                 SecurityContextHolder.getContext().setAuthentication(authentication);
             }
         } catch (Exception ex) {
