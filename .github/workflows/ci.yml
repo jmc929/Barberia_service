@@ -1,0 +1,43 @@
+name: CI - Build & Validate
+
+on:
+  push:
+    branches: [main, develop-jose, develop-andruw]
+  pull_request:
+    branches: [main]
+
+jobs:
+  build:
+    name: Build & Compile
+    runs-on: ubuntu-latest
+
+    env:
+      SPRING_DATASOURCE_USERNAME: ${{ secrets.SPRING_DATASOURCE_USERNAME }}
+      SPRING_DATASOURCE_PASSWORD: ${{ secrets.SPRING_DATASOURCE_PASSWORD }}
+      JWT_SECRET: ${{ secrets.JWT_SECRET }}
+
+    steps:
+      - name: Checkout código
+        uses: actions/checkout@v4
+
+      - name: Configurar Java 21
+        uses: actions/setup-java@v4
+        with:
+          java-version: '21'
+          distribution: 'temurin'
+          cache: maven
+
+      - name: Compilar proyecto
+        working-directory: backend
+        run: mvn clean compile -q
+
+      - name: Verificar empaquetado
+        working-directory: backend
+        run: mvn package -DskipTests -q
+
+      - name: Subir artefacto
+        uses: actions/upload-artifact@v4
+        with:
+          name: barberia-service-jar
+          path: backend/target/*.jar
+          retention-days: 7
