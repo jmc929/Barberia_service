@@ -5,8 +5,6 @@ import com.barberia.modules.modulo_agendamiento.models.entities.Cita;
 import com.barberia.modules.modulo_agendamiento.repositories.CitaRepository;
 import com.barberia.modules.modulo_horarios.models.dtos.HorarioNegocioDTO;
 import com.barberia.modules.modulo_horarios.repositories.HorarioNegocioRepository;
-import com.barberia.modules.modulo_servicios.models.entities.Servicio;
-import com.barberia.modules.modulo_servicios.repositories.ServicioRepository;
 import com.barberia.shared.exceptions.ResourceNotFoundException;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.dao.CannotSerializeTransactionException;
@@ -32,18 +30,8 @@ public class CitaAgendamientoService {
     @Autowired
     private HorarioNegocioRepository horarioNegocioRepository;
 
-    @Autowired
-    private ServicioRepository servicioRepository;
-
-    /**
-     * Resuelve idDia desde LocalDate con convención: 1=Lunes ... 7=Domingo.
-     */
     private long calcularIdDia(LocalDate fechaCita) {
-        return fechaCita.getDayOfWeek().getValue(); // MON=1 ... SUN=7
-    }
-
-    private LocalTime calcularHoraFinTime(LocalTime horaInicio, int duracionMinutos) {
-        return horaInicio.plusMinutes(duracionMinutos);
+        return fechaCita.getDayOfWeek().getValue();
     }
 
     private HorarioNegocioDTO obtenerHorarioParaFecha(LocalDate fechaCita) {
@@ -59,26 +47,11 @@ public class CitaAgendamientoService {
                 .orElseThrow(() -> new ResourceNotFoundException("Horario no encontrado para el día: " + idDia));
     }
 
-    private Servicio obtenerServicioPorId(Long idServicio) {
-        if (idServicio == null) {
-            throw new IllegalArgumentException("idServicio es requerido");
-        }
-        return servicioRepository.findById(idServicio)
-                .orElseThrow(() -> new ResourceNotFoundException("Servicio no encontrado para id: " + idServicio));
-    }
-
-    private int obtenerDuracionServicioMinutos(Long idServicio) {
-        return obtenerServicioPorId(idServicio).getDuracion();
-    }
-
-    private void validarHorario(LocalDate fechaCita, LocalTime horaInicio, int duracionMinutos) {
+    private void validarHorario(LocalDate fechaCita, LocalTime horaInicio, LocalTime horaFin) {
         HorarioNegocioDTO horario = obtenerHorarioParaFecha(fechaCita);
         if (horario.getLocalAbierto() == null || !horario.getLocalAbierto()) {
             throw new IllegalArgumentException("El local no está abierto para la fecha seleccionada");
         }
-
-        LocalTime horaFin = calcularHoraFinTime(horaInicio, duracionMinutos);
-
         if (horaInicio.isBefore(horario.getHoraApertura())) {
             throw new IllegalArgumentException("La hora de inicio está fuera del horario de apertura");
         }
@@ -97,14 +70,13 @@ public class CitaAgendamientoService {
         if (request.getIdServicio() == null) {
             throw new IllegalArgumentException("idServicio es requerido");
         }
-        if (request.getFechaCita() == null || request.getHoraInicioCita() == null) {
-            throw new IllegalArgumentException("fechaCita y horaInicioCita son requeridos");
+        if (request.getFechaCita() == null || request.getHoraInicioCita() == null || request.getHoraFinCita() == null) {
+            throw new IllegalArgumentException("fechaCita, horaInicioCita y horaFinCita son requeridos");
         }
 
-        int duracionMinutos = obtenerDuracionServicioMinutos(request.getIdServicio());
-        validarHorario(request.getFechaCita(), request.getHoraInicioCita(), duracionMinutos);
+        LocalTime horaFin = request.getHoraFinCita();
+        validarHorario(request.getFechaCita(), request.getHoraInicioCita(), horaFin);
 
-        LocalTime horaFin = calcularHoraFinTime(request.getHoraInicioCita(), duracionMinutos);
         List<Cita> conflictos = citaRepository.findConflicts(
                 request.getNumeroDocumentoPeluquero(),
                 request.getFechaCita(),
@@ -126,27 +98,26 @@ public class CitaAgendamientoService {
     }
 
     @Transactional(isolation = Isolation.SERIALIZABLE)
-    public CitaDTO agendar(CitaCreateDTO request) {
+    public CitaDTO agendar(CitaCreateDTO request, String numeroDocumentoCliente) {
         int reintentos = 1;
         for (int intento = 0; intento <= reintentos; intento++) {
             try {
-                return agendarImpl(request);
+                return agendarImpl(request, numeroDocumentoCliente);
             } catch (CannotSerializeTransactionException ex) {
                 if (intento == reintentos) {
                     throw ex;
                 }
-                // reintentar por serialización
             }
         }
         throw new IllegalStateException("No se pudo agendar la cita por concurrencia");
     }
 
-    private CitaDTO agendarImpl(CitaCreateDTO request) {
+    private CitaDTO agendarImpl(CitaCreateDTO request, String numeroDocumentoCliente) {
         if (request == null) {
             throw new IllegalArgumentException("Request es requerido");
         }
-        if (request.getNumeroDocumentoCliente() == null || request.getNumeroDocumentoCliente().isBlank()) {
-            throw new IllegalArgumentException("numeroDocumentoCliente es requerido");
+        if (numeroDocumentoCliente == null || numeroDocumentoCliente.isBlank()) {
+            throw new IllegalArgumentException("numeroDocumentoCliente no encontrado en el token");
         }
         if (request.getNumeroDocumentoPeluquero() == null || request.getNumeroDocumentoPeluquero().isBlank()) {
             throw new IllegalArgumentException("numeroDocumentoPeluquero es requerido");
@@ -154,13 +125,12 @@ public class CitaAgendamientoService {
         if (request.getIdServicio() == null) {
             throw new IllegalArgumentException("idServicio es requerido");
         }
-        if (request.getFechaCita() == null || request.getHoraInicioCita() == null) {
-            throw new IllegalArgumentException("fechaCita y horaInicioCita son requeridos");
+        if (request.getFechaCita() == null || request.getHoraInicioCita() == null || request.getHoraFinCita() == null) {
+            throw new IllegalArgumentException("fechaCita, horaInicioCita y horaFinCita son requeridos");
         }
 
-        int duracionMinutos = obtenerDuracionServicioMinutos(request.getIdServicio());
-        validarHorario(request.getFechaCita(), request.getHoraInicioCita(), duracionMinutos);
-        LocalTime horaFin = calcularHoraFinTime(request.getHoraInicioCita(), duracionMinutos);
+        LocalTime horaFin = request.getHoraFinCita();
+        validarHorario(request.getFechaCita(), request.getHoraInicioCita(), horaFin);
 
         List<Cita> conflictos = citaRepository.findConflictsForUpdate(
                 request.getNumeroDocumentoPeluquero(),
@@ -176,13 +146,14 @@ public class CitaAgendamientoService {
 
         Instant now = Instant.now();
         Cita cita = Cita.builder()
-                .numeroDocumentoCliente(request.getNumeroDocumentoCliente())
+                .numeroDocumentoCliente(numeroDocumentoCliente)
                 .numeroDocumentoPeluquero(request.getNumeroDocumentoPeluquero())
                 .idServicio(request.getIdServicio())
                 .fechaCita(request.getFechaCita())
                 .horaInicioCita(request.getHoraInicioCita())
                 .horaFinCita(horaFin)
                 .idEstado(ESTADO_ACTIVO)
+                .citaConfirmada(false)
                 .fechaCreacion(now)
                 .build();
 
@@ -227,8 +198,8 @@ public class CitaAgendamientoService {
         if (noCita == null) {
             throw new IllegalArgumentException("noCita es requerido");
         }
-        if (request == null || request.getFechaCita() == null || request.getHoraInicioCita() == null) {
-            throw new IllegalArgumentException("fechaCita y horaInicioCita son requeridos");
+        if (request == null || request.getFechaCita() == null || request.getHoraInicioCita() == null || request.getHoraFinCita() == null) {
+            throw new IllegalArgumentException("fechaCita, horaInicioCita y horaFinCita son requeridos");
         }
 
         Cita cita = citaRepository.findById(noCita)
@@ -238,9 +209,8 @@ public class CitaAgendamientoService {
             throw new IllegalArgumentException("La cita no está activa o ya fue gestionada");
         }
 
-        int duracionMinutos = obtenerDuracionServicioMinutos(cita.getIdServicio());
-        validarHorario(request.getFechaCita(), request.getHoraInicioCita(), duracionMinutos);
-        LocalTime horaFin = calcularHoraFinTime(request.getHoraInicioCita(), duracionMinutos);
+        LocalTime horaFin = request.getHoraFinCita();
+        validarHorario(request.getFechaCita(), request.getHoraInicioCita(), horaFin);
 
         List<Cita> conflictos = citaRepository.findConflictsForUpdateExcludingNoCita(
                 cita.getNumeroDocumentoPeluquero(),
@@ -264,6 +234,28 @@ public class CitaAgendamientoService {
         return convertirADTO(guardada);
     }
 
+    @Transactional
+    public CitaDTO confirmar(Long noCita, String numeroDocumentoPeluquero) {
+        if (noCita == null) {
+            throw new IllegalArgumentException("noCita es requerido");
+        }
+
+        Cita cita = citaRepository.findById(noCita)
+                .orElseThrow(() -> new ResourceNotFoundException("Cita no encontrada para noCita: " + noCita));
+
+        if (!numeroDocumentoPeluquero.equals(cita.getNumeroDocumentoPeluquero())) {
+            throw new IllegalArgumentException("No puedes confirmar una cita que no te pertenece");
+        }
+
+        if (cita.getIdEstado() == null || cita.getIdEstado() != ESTADO_ACTIVO) {
+            throw new IllegalArgumentException("La cita no está activa");
+        }
+
+        cita.setCitaConfirmada(true);
+        Cita guardada = citaRepository.save(cita);
+        return convertirADTO(guardada);
+    }
+
     private CitaDTO convertirADTO(Cita c) {
         return CitaDTO.builder()
                 .noCita(c.getNoCita())
@@ -274,6 +266,7 @@ public class CitaAgendamientoService {
                 .horaInicioCita(c.getHoraInicioCita())
                 .horaFinCita(c.getHoraFinCita())
                 .idEstado(c.getIdEstado())
+                .citaConfirmada(c.getCitaConfirmada())
                 .fechaCreacion(c.getFechaCreacion())
                 .build();
     }

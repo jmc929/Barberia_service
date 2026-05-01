@@ -19,5 +19,6 @@ public class CitaDTO {
     private LocalTime horaInicioCita;
     private LocalTime horaFinCita;
     private Long idEstado;
+    private Boolean citaConfirmada;
     private Instant fechaCreacion;
 }

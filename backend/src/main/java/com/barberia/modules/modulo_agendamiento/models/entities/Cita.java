@@ -8,7 +8,7 @@ import java.time.LocalDate;
 import java.time.LocalTime;
 
 @Entity(name = "CitaAgendamiento")
-@Table(name = "cita")
+@Table(name = "tbl_citas")
 @Data
 @Builder
 @NoArgsConstructor
@@ -26,5 +26,6 @@ public class Cita {
     private LocalTime horaInicioCita;
     private LocalTime horaFinCita;
     private Long idEstado;
+    private Boolean citaConfirmada;
     private Instant fechaCreacion;
 }

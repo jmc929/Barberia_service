@@ -6,7 +6,10 @@ import com.barberia.shared.utils.ApiResponse;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.*;
+
+import java.util.Map;
 
 @RestController
 @RequestMapping("/api/agendamiento")
@@ -30,9 +33,13 @@ public class AgendamientoController {
     }
 
     @PostMapping("/agendar")
-    public ResponseEntity<ApiResponse<CitaDTO>> agendar(@RequestBody CitaCreateDTO request) {
+    public ResponseEntity<ApiResponse<CitaDTO>> agendar(@RequestBody CitaCreateDTO request,
+                                                        Authentication authentication) {
         try {
-            CitaDTO creado = citaAgendamientoService.agendar(request);
+            @SuppressWarnings("unchecked")
+            String numeroDocumentoCliente = (String) ((Map<String, Object>) authentication.getDetails())
+                    .get("numeroDocumento");
+            CitaDTO creado = citaAgendamientoService.agendar(request, numeroDocumentoCliente);
             return ResponseEntity.status(HttpStatus.CREATED).body(ApiResponse.success("Cita agendada", creado));
         } catch (IllegalArgumentException e) {
             return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(ApiResponse.error(e.getMessage()));
@@ -46,6 +53,22 @@ public class AgendamientoController {
         try {
             CitaDTO cancelada = citaAgendamientoService.cancelar(noCita);
             return ResponseEntity.ok(ApiResponse.success("Cita cancelada", cancelada));
+        } catch (IllegalArgumentException e) {
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(ApiResponse.error(e.getMessage()));
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(ApiResponse.error(e.getMessage()));
+        }
+    }
+
+    @PutMapping("/confirmar/{noCita}")
+    public ResponseEntity<ApiResponse<CitaDTO>> confirmar(@PathVariable Long noCita,
+                                                          Authentication authentication) {
+        try {
+            @SuppressWarnings("unchecked")
+            String numeroDocumentoPeluquero = (String) ((Map<String, Object>) authentication.getDetails())
+                    .get("numeroDocumento");
+            CitaDTO confirmada = citaAgendamientoService.confirmar(noCita, numeroDocumentoPeluquero);
+            return ResponseEntity.ok(ApiResponse.success("Cita confirmada", confirmada));
         } catch (IllegalArgumentException e) {
             return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(ApiResponse.error(e.getMessage()));
         } catch (Exception e) {
