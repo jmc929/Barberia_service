@@ -1,0 +1,9 @@
+Contexto API — Barbería
+
+Backend: Spring Boot, API REST. Adjunto: especificación OpenAPI 3 (fuente de verdad: rutas, métodos, esquemas y códigos).
+Base URL (desarrollo): http://localhost:8080/api
+En otros entornos, sustituir por la URL desplegada; los paths relativos deben coincidir exactamente con el OpenAPI (incluido si aparece prefijo /api en el path o solo en el servidor).
+Formato de respuestas: casi todo va envuelto en un objeto ApiResponse: success (boolean), message (string), data (payload o null en error). El frontend debe leer el cuerpo útil desde data.
+Autenticación: tras login, el token JWT viene en data.token (y el tipo suele ser Bearer en data.type). Para el resto de peticiones, enviar Authorization: Bearer <token>. El OpenAPI define el esquema de seguridad (bearer/JWT).
+Sin token: solo registro de persona y login (los paths exactos están en el OpenAPI; en el backend suelen ser algo como POST .../personas/registro y POST .../auth/login). Todo lo demás requiere JWT.
+CORS: el backend permite orígenes amplios para desarrollo; el front puede vivir en otro puerto/host.

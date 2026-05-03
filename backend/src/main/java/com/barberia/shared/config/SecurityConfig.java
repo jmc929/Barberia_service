@@ -11,6 +11,7 @@ import org.springframework.security.web.authentication.UsernamePasswordAuthentic
 import org.springframework.web.cors.CorsConfiguration;
 import org.springframework.web.cors.CorsConfigurationSource;
 import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
+import org.springframework.http.HttpMethod;
 
 import java.util.Arrays;
 
@@ -31,9 +32,9 @@ public class SecurityConfig {
             .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
             .authorizeHttpRequests(authz -> authz
                 // Permitir registro sin autenticación
-                .requestMatchers("POST", "/api/v1/personas/registro").permitAll()
+                .requestMatchers(HttpMethod.POST, "/api/v1/personas/registro").permitAll()
                 // Permitir login sin autenticación
-                .requestMatchers("POST", "/api/v1/auth/login").permitAll()
+                .requestMatchers(HttpMethod.POST, "/api/v1/auth/login").permitAll()
                 // Permitir documentación Swagger sin auth
                 .requestMatchers("/api/swagger-ui.html", "/api/swagger-ui/**", "/api/v3/api-docs", "/api/v3/api-docs/**").permitAll()
                 .requestMatchers("/swagger-ui.html", "/swagger-ui/**", "/v3/api-docs", "/v3/api-docs/**").permitAll()
