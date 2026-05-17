@@ -113,5 +113,59 @@ public class UsuarioController {
                 .body(ApiResponse.error(e.getMessage()));
         }
     }
+
+    /**
+     * PUT /api/personas/{numeroDocumento}/bloquear
+     * Bloquea un cliente (rol 3) cambiando su idEstado a 4
+     * Requiere: Rol Administrador (idRol = 1)
+     */
+    @PutMapping("/{numeroDocumento}/bloquear")
+    @PreAuthorize("hasAuthority('ROLE_1')")
+    public ResponseEntity<ApiResponse<UsuarioDTO>> bloquearUsuario(
+            @PathVariable String numeroDocumento) {
+        try {
+            UsuarioDTO usuario = usuarioService.bloquearUsuario(numeroDocumento);
+            return ResponseEntity.ok(ApiResponse.success("Cliente bloqueado exitosamente", usuario));
+        } catch (IllegalArgumentException e) {
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST)
+                .body(ApiResponse.error(e.getMessage()));
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND)
+                .body(ApiResponse.error(e.getMessage()));
+        }
+    }
+
+    /**
+     * GET /api/personas/bloqueados
+     * Obtiene todos los clientes bloqueados (idEstado = 4)
+     * Requiere: Rol Administrador (idRol = 1)
+     */
+    @GetMapping("/bloqueados")
+    @PreAuthorize("hasAuthority('ROLE_1')")
+    public ResponseEntity<ApiResponse<List<UsuarioDTO>>> obtenerUsuariosBloqueados() {
+        List<UsuarioDTO> usuariosBloqueados = usuarioService.obtenerUsuariosBloqueados();
+        return ResponseEntity.ok(ApiResponse.success("Clientes bloqueados obtenidos", usuariosBloqueados));
+    }
+
+    /**
+     * PUT /api/personas/{numeroDocumento}/desbloquear
+     * Desbloquea un cliente (rol 3) cambiando su idEstado de 4 a 1
+     * Requiere: Rol Administrador (idRol = 1)
+     */
+    @PutMapping("/{numeroDocumento}/desbloquear")
+    @PreAuthorize("hasAuthority('ROLE_1')")
+    public ResponseEntity<ApiResponse<UsuarioDTO>> desbloquearUsuario(
+            @PathVariable String numeroDocumento) {
+        try {
+            UsuarioDTO usuario = usuarioService.desbloquearUsuario(numeroDocumento);
+            return ResponseEntity.ok(ApiResponse.success("Cliente desbloqueado exitosamente", usuario));
+        } catch (IllegalArgumentException e) {
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST)
+                .body(ApiResponse.error(e.getMessage()));
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND)
+                .body(ApiResponse.error(e.getMessage()));
+        }
+    }
 }
 
