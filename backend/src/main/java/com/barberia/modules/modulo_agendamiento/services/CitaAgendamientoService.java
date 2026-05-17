@@ -5,6 +5,8 @@ import com.barberia.modules.modulo_agendamiento.models.entities.Cita;
 import com.barberia.modules.modulo_agendamiento.repositories.CitaRepository;
 import com.barberia.modules.modulo_horarios.models.dtos.HorarioNegocioDTO;
 import com.barberia.modules.modulo_horarios.repositories.HorarioNegocioRepository;
+import com.barberia.modules.modulo_usuarios.models.entities.Usuario;
+import com.barberia.modules.modulo_usuarios.repositories.UsuarioRepository;
 import com.barberia.shared.exceptions.ResourceNotFoundException;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.dao.CannotSerializeTransactionException;
@@ -29,6 +31,9 @@ public class CitaAgendamientoService {
 
     @Autowired
     private HorarioNegocioRepository horarioNegocioRepository;
+
+    @Autowired
+    private UsuarioRepository usuarioRepository;
 
     private long calcularIdDia(LocalDate fechaCita) {
         return fechaCita.getDayOfWeek().getValue();
@@ -118,6 +123,13 @@ public class CitaAgendamientoService {
         }
         if (numeroDocumentoCliente == null || numeroDocumentoCliente.isBlank()) {
             throw new IllegalArgumentException("numeroDocumentoCliente no encontrado en el token");
+        }
+
+        // Validar que el cliente no esté bloqueado (idEstado = 4)
+        Usuario cliente = usuarioRepository.findByNumeroDocumento(numeroDocumentoCliente)
+                .orElseThrow(() -> new ResourceNotFoundException("Cliente no encontrado con documento: " + numeroDocumentoCliente));
+        if (cliente.getIdEstado() != null && cliente.getIdEstado().equals(4)) {
+            throw new IllegalArgumentException("Tu cuenta está bloqueada y no puedes agendar citas");
         }
         if (request.getNumeroDocumentoPeluquero() == null || request.getNumeroDocumentoPeluquero().isBlank()) {
             throw new IllegalArgumentException("numeroDocumentoPeluquero es requerido");

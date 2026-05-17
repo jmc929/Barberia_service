@@ -114,6 +114,61 @@ public class UsuarioService {
     }
 
     /**
+     * Bloquea un cliente (rol 3) cambiando su idEstado a 4
+     * 
+     * @param numeroDocumento documento del usuario a bloquear
+     * @return UsuarioDTO del usuario bloqueado
+     * @throws IllegalArgumentException si el usuario no tiene rol 3 (cliente)
+     * @throws ResourceNotFoundException si el usuario no existe
+     */
+    public UsuarioDTO bloquearUsuario(String numeroDocumento) {
+        Usuario usuario = usuarioRepository.findByNumeroDocumento(numeroDocumento)
+            .orElseThrow(() -> new ResourceNotFoundException("Persona no encontrada con documento: " + numeroDocumento));
+
+        // Validar que sea cliente (rol 3)
+        if (!usuario.getIdRol().equals(3)) {
+            throw new IllegalArgumentException("Error: Solo se pueden bloquear clientes (rol 3). Este usuario tiene rol " + usuario.getIdRol());
+        }
+
+        usuario.setIdEstado(4); // 4 = Bloqueado
+        return convertirADTO(usuarioRepository.save(usuario));
+    }
+
+    /**
+     * Obtiene todos los clientes bloqueados (idEstado = 4 y idRol = 3)
+     * 
+     * @return Lista de UsuarioDTO de clientes bloqueados
+     */
+    public List<UsuarioDTO> obtenerUsuariosBloqueados() {
+        return usuarioRepository.findByIdEstado(4)
+            .stream()
+            .filter(usuario -> usuario.getIdRol().equals(3)) // Solo clientes
+            .map(this::convertirADTO)
+            .collect(Collectors.toList());
+    }
+
+    /**
+     * Desbloquea un cliente (rol 3) cambiando su idEstado de 4 a 1
+     * 
+     * @param numeroDocumento documento del usuario a desbloquear
+     * @return UsuarioDTO del usuario desbloqueado
+     * @throws IllegalArgumentException si el usuario no está bloqueado
+     * @throws ResourceNotFoundException si el usuario no existe
+     */
+    public UsuarioDTO desbloquearUsuario(String numeroDocumento) {
+        Usuario usuario = usuarioRepository.findByNumeroDocumento(numeroDocumento)
+            .orElseThrow(() -> new ResourceNotFoundException("Persona no encontrada con documento: " + numeroDocumento));
+
+        // Validar que esté bloqueado (idEstado = 4)
+        if (!usuario.getIdEstado().equals(4)) {
+            throw new IllegalArgumentException("Error: El usuario no está bloqueado. Estado actual: " + usuario.getIdEstado());
+        }
+
+        usuario.setIdEstado(1); // 1 = Activo
+        return convertirADTO(usuarioRepository.save(usuario));
+    }
+
+    /**
      * Convierte una Entity Usuario a DTO (sin exponer contraseña hasheada)
      */
     private UsuarioDTO convertirADTO(Usuario usuario) {
