@@ -27,5 +27,7 @@ public class Cita {
     private LocalTime horaFinCita;
     private Long idEstado;
     private Boolean citaConfirmada;
+    @Column(name = "motivo_cancelacion", length = 500)
+    private String motivoCancelacion;
     private Instant fechaCreacion;
 }

@@ -20,5 +20,6 @@ public class CitaDTO {
     private LocalTime horaFinCita;
     private Long idEstado;
     private Boolean citaConfirmada;
+    private String motivoCancelacion;
     private Instant fechaCreacion;
 }

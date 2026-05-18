@@ -174,29 +174,44 @@ public class CitaAgendamientoService {
     }
 
     @Transactional
-    public CitaDTO cancelar(Long noCita) {
+    public CitaDTO cancelar(Long noCita, String motivoCancelacion, String numeroDocumentoSolicitante) {
         if (noCita == null) {
             throw new IllegalArgumentException("noCita es requerido");
+        }
+        if (motivoCancelacion == null || motivoCancelacion.isBlank()) {
+            throw new IllegalArgumentException("motivoCancelacion es requerido");
         }
 
         Cita cita = citaRepository.findById(noCita)
                 .orElseThrow(() -> new ResourceNotFoundException("Cita no encontrada para noCita: " + noCita));
 
+        // Validar permiso: solo el cliente dueño o el peluquero asignado pueden cancelar
+        if (numeroDocumentoSolicitante == null || numeroDocumentoSolicitante.isBlank()) {
+            throw new IllegalArgumentException("numeroDocumento solicitante no encontrado en el token");
+        }
+
+        boolean esCliente = numeroDocumentoSolicitante.equals(cita.getNumeroDocumentoCliente());
+        boolean esPeluquero = numeroDocumentoSolicitante.equals(cita.getNumeroDocumentoPeluquero());
+        if (!esCliente && !esPeluquero) {
+            throw new IllegalArgumentException("No tienes permiso para cancelar esta cita");
+        }
+
         if (cita.getIdEstado() == null || cita.getIdEstado() != ESTADO_ACTIVO) {
             throw new IllegalArgumentException("La cita no está activa o ya fue gestionada");
         }
 
+        cita.setMotivoCancelacion(motivoCancelacion);
         cita.setIdEstado(ESTADO_CANCELADA);
         Cita guardada = citaRepository.save(cita);
         return convertirADTO(guardada);
     }
 
     @Transactional(isolation = Isolation.SERIALIZABLE)
-    public CitaDTO reprogramar(Long noCita, CitaReprogramarDTO request) {
+    public CitaDTO reprogramar(Long noCita, CitaReprogramarDTO request, String numeroDocumentoCliente) {
         int reintentos = 1;
         for (int intento = 0; intento <= reintentos; intento++) {
             try {
-                return reprogramarImpl(noCita, request);
+                return reprogramarImpl(noCita, request, numeroDocumentoCliente);
             } catch (CannotSerializeTransactionException ex) {
                 if (intento == reintentos) {
                     throw ex;
@@ -206,7 +221,7 @@ public class CitaAgendamientoService {
         throw new IllegalStateException("No se pudo reprogramar la cita por concurrencia");
     }
 
-    private CitaDTO reprogramarImpl(Long noCita, CitaReprogramarDTO request) {
+    private CitaDTO reprogramarImpl(Long noCita, CitaReprogramarDTO request, String numeroDocumentoCliente) {
         if (noCita == null) {
             throw new IllegalArgumentException("noCita es requerido");
         }
@@ -216,6 +231,12 @@ public class CitaAgendamientoService {
 
         Cita cita = citaRepository.findById(noCita)
                 .orElseThrow(() -> new ResourceNotFoundException("Cita no encontrada para noCita: " + noCita));
+
+        // Validar que quien solicita la reprogramación sea el cliente dueño de la cita
+        if (numeroDocumentoCliente == null || numeroDocumentoCliente.isBlank() ||
+                cita.getNumeroDocumentoCliente() == null || !cita.getNumeroDocumentoCliente().equals(numeroDocumentoCliente)) {
+            throw new IllegalArgumentException("No puedes reprogramar una cita que no te pertenece");
+        }
 
         if (cita.getIdEstado() == null || cita.getIdEstado() != ESTADO_ACTIVO) {
             throw new IllegalArgumentException("La cita no está activa o ya fue gestionada");
@@ -279,6 +300,7 @@ public class CitaAgendamientoService {
                 .horaFinCita(c.getHoraFinCita())
                 .idEstado(c.getIdEstado())
                 .citaConfirmada(c.getCitaConfirmada())
+                .motivoCancelacion(c.getMotivoCancelacion())
                 .fechaCreacion(c.getFechaCreacion())
                 .build();
     }
