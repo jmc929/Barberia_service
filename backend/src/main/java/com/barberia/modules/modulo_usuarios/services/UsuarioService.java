@@ -169,6 +169,85 @@ public class UsuarioService {
     }
 
     /**
+     * Actualiza el perfil del usuario identificado por numeroDocumento.
+     * Solo permite actualizar el usuario mismo.
+     * Valida que los campos no estén vacíos y que el número de celular tenga formato.
+     */
+    public UsuarioDTO actualizarPerfil(String numeroDocumento, com.barberia.modules.modulo_usuarios.models.dtos.UpdatePerfilDTO dto) {
+        if (dto == null) {
+            throw new IllegalArgumentException("Request es requerido");
+        }
+
+        if (numeroDocumento == null || numeroDocumento.isBlank()) {
+            throw new IllegalArgumentException("Usuario no autenticado");
+        }
+
+        Usuario usuario = usuarioRepository.findByNumeroDocumento(numeroDocumento)
+            .orElseThrow(() -> new ResourceNotFoundException("Usuario no encontrado con documento: " + numeroDocumento));
+
+        boolean anyUpdated = false;
+
+        // Si se provee numeroCelular -> validar y setear
+        if (dto.getNumeroCelular() != null && !dto.getNumeroCelular().isBlank()) {
+            String telefono = dto.getNumeroCelular();
+            if (!telefono.matches("^\\+?[0-9]{7,20}$")) {
+                throw new IllegalArgumentException("Numero de celular inválido");
+            }
+            usuario.setNumeroCelular(telefono);
+            anyUpdated = true;
+        }
+
+        // Si se provee email -> validar unico y setear
+        if (dto.getEmail() != null && !dto.getEmail().isBlank()) {
+            String nuevoEmail = dto.getEmail();
+            if (!usuario.getEmail().equalsIgnoreCase(nuevoEmail) && usuarioRepository.existsByEmail(nuevoEmail)) {
+                throw new IllegalArgumentException("El email ya está en uso por otro usuario");
+            }
+            usuario.setEmail(nuevoEmail);
+            anyUpdated = true;
+        }
+
+        // Si se provee nombrePersona -> setear
+        if (dto.getNombrePersona() != null && !dto.getNombrePersona().isBlank()) {
+            usuario.setNombrePersona(dto.getNombrePersona());
+            anyUpdated = true;
+        }
+
+        // Manejo de cambio de contraseña (opcional)
+        String nueva = dto.getNewPassword();
+        if (nueva != null && !nueva.isBlank()) {
+            String actual = dto.getCurrentPassword();
+            if (actual == null || actual.isBlank()) {
+                throw new IllegalArgumentException("Es necesaria la contraseña actual para cambiar la contraseña");
+            }
+
+            // Verificar que la contraseña actual coincida
+            if (!passwordEncoder.matches(actual, usuario.getContrasenaHasheada())) {
+                throw new IllegalArgumentException("Contraseña actual incorrecta");
+            }
+
+            if (nueva.length() < 6) {
+                throw new IllegalArgumentException("La nueva contraseña debe tener al menos 6 caracteres");
+            }
+
+            String confirmar = dto.getConfirmarNuevaPassword();
+            if (confirmar == null || !nueva.equals(confirmar)) {
+                throw new IllegalArgumentException("Las contraseñas nuevas no coinciden");
+            }
+
+            usuario.setContrasenaHasheada(passwordEncoder.encode(nueva));
+            anyUpdated = true;
+        }
+
+        if (!anyUpdated) {
+            throw new IllegalArgumentException("No hay campos para actualizar");
+        }
+
+        Usuario guardado = usuarioRepository.save(usuario);
+        return convertirADTO(guardado);
+    }
+
+    /**
      * Deshabilita un barbero (rol 2) cambiando su idEstado a 5
      *
      * @param numeroDocumento documento del usuario a deshabilitar
