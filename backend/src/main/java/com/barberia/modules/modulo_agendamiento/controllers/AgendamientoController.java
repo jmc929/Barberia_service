@@ -49,9 +49,14 @@ public class AgendamientoController {
     }
 
     @PostMapping("/cancelar/{noCita}")
-    public ResponseEntity<ApiResponse<CitaDTO>> cancelar(@PathVariable Long noCita) {
+    public ResponseEntity<ApiResponse<CitaDTO>> cancelar(@PathVariable Long noCita,
+                                                        @RequestBody CancelarCitaDTO request,
+                                                        Authentication authentication) {
         try {
-            CitaDTO cancelada = citaAgendamientoService.cancelar(noCita);
+            @SuppressWarnings("unchecked")
+            String numeroDocumentoSolicitante = (String) ((Map<String, Object>) authentication.getDetails())
+                    .get("numeroDocumento");
+            CitaDTO cancelada = citaAgendamientoService.cancelar(noCita, request.getMotivoCancelacion(), numeroDocumentoSolicitante);
             return ResponseEntity.ok(ApiResponse.success("Cita cancelada", cancelada));
         } catch (IllegalArgumentException e) {
             return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(ApiResponse.error(e.getMessage()));
@@ -78,9 +83,12 @@ public class AgendamientoController {
 
     @PutMapping("/reprogramar/{noCita}")
     public ResponseEntity<ApiResponse<CitaDTO>> reprogramar(@PathVariable Long noCita,
-                                                            @RequestBody CitaReprogramarDTO request) {
+                                                            @RequestBody CitaReprogramarDTO request,
+                                                            Authentication authentication) {
         try {
-            CitaDTO reprogramada = citaAgendamientoService.reprogramar(noCita, request);
+            @SuppressWarnings("unchecked")
+            String numeroDocumentoCliente = (String) ((Map<String, Object>) authentication.getDetails()).get("numeroDocumento");
+            CitaDTO reprogramada = citaAgendamientoService.reprogramar(noCita, request, numeroDocumentoCliente);
             return ResponseEntity.ok(ApiResponse.success("Cita reprogramada", reprogramada));
         } catch (IllegalArgumentException e) {
             return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(ApiResponse.error(e.getMessage()));
