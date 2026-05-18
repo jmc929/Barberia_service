@@ -169,6 +169,50 @@ public class UsuarioService {
     }
 
     /**
+     * Deshabilita un barbero (rol 2) cambiando su idEstado a 5
+     *
+     * @param numeroDocumento documento del usuario a deshabilitar
+     * @return UsuarioDTO del barbero deshabilitado
+     * @throws IllegalArgumentException si el usuario no es barbero
+     * @throws ResourceNotFoundException si el usuario no existe
+     */
+    public UsuarioDTO deshabilitarBarbero(String numeroDocumento) {
+        Usuario usuario = usuarioRepository.findByNumeroDocumento(numeroDocumento)
+            .orElseThrow(() -> new ResourceNotFoundException("Persona no encontrada con documento: " + numeroDocumento));
+
+        if (!usuario.getIdRol().equals(2)) {
+            throw new IllegalArgumentException("No es barbero");
+        }
+
+        usuario.setIdEstado(5); // 5 = Deshabilitado
+        return convertirADTO(usuarioRepository.save(usuario));
+    }
+
+    /**
+     * Habilita un barbero deshabilitado (rol 2) cambiando su idEstado de 5 a 1
+     *
+     * @param numeroDocumento documento del usuario a habilitar
+     * @return UsuarioDTO del barbero habilitado
+     * @throws IllegalArgumentException si el usuario no es barbero o no está deshabilitado
+     * @throws ResourceNotFoundException si el usuario no existe
+     */
+    public UsuarioDTO habilitarBarbero(String numeroDocumento) {
+        Usuario usuario = usuarioRepository.findByNumeroDocumento(numeroDocumento)
+            .orElseThrow(() -> new ResourceNotFoundException("Persona no encontrada con documento: " + numeroDocumento));
+
+        if (!usuario.getIdRol().equals(2)) {
+            throw new IllegalArgumentException("No es barbero");
+        }
+
+        if (!usuario.getIdEstado().equals(5)) {
+            throw new IllegalArgumentException("El barbero no está deshabilitado");
+        }
+
+        usuario.setIdEstado(1); // 1 = Activo
+        return convertirADTO(usuarioRepository.save(usuario));
+    }
+
+    /**
      * Convierte una Entity Usuario a DTO (sin exponer contraseña hasheada)
      */
     private UsuarioDTO convertirADTO(Usuario usuario) {

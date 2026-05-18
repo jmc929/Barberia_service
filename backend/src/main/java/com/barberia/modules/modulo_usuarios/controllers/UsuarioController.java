@@ -167,5 +167,47 @@ public class UsuarioController {
                 .body(ApiResponse.error(e.getMessage()));
         }
     }
+
+    /**
+     * PUT /api/personas/{numeroDocumento}/deshabilitar-barbero
+     * Deshabilita un barbero (idRol = 2) cambiando su idEstado a 5
+     * Requiere: Rol Administrador (idRol = 1)
+     */
+    @PutMapping("/{numeroDocumento}/deshabilitar-barbero")
+    @PreAuthorize("hasAuthority('ROLE_1')")
+    public ResponseEntity<ApiResponse<UsuarioDTO>> deshabilitarBarbero(
+            @PathVariable String numeroDocumento) {
+        try {
+            UsuarioDTO usuario = usuarioService.deshabilitarBarbero(numeroDocumento);
+            return ResponseEntity.ok(ApiResponse.success("Barbero deshabilitado exitosamente", usuario));
+        } catch (IllegalArgumentException e) {
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST)
+                .body(ApiResponse.error(e.getMessage()));
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND)
+                .body(ApiResponse.error(e.getMessage()));
+        }
+    }
+
+    /**
+     * PUT /api/personas/{numeroDocumento}/habilitar-barbero
+     * Habilita un barbero deshabilitado (idRol = 2, idEstado = 5) cambiando su idEstado a 1
+     * Requiere: Rol Administrador (idRol = 1)
+     */
+    @PutMapping("/{numeroDocumento}/habilitar-barbero")
+    @PreAuthorize("hasAuthority('ROLE_1')")
+    public ResponseEntity<ApiResponse<UsuarioDTO>> habilitarBarbero(
+            @PathVariable String numeroDocumento) {
+        try {
+            UsuarioDTO usuario = usuarioService.habilitarBarbero(numeroDocumento);
+            return ResponseEntity.ok(ApiResponse.success("Barbero habilitado exitosamente", usuario));
+        } catch (IllegalArgumentException e) {
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST)
+                .body(ApiResponse.error(e.getMessage()));
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND)
+                .body(ApiResponse.error(e.getMessage()));
+        }
+    }
 }
 
