@@ -20,4 +20,7 @@ import java.util.Optional;
 @Repository
 public interface CitaRepository extends JpaRepository<Cita, Long> {
 
+    boolean existsByIdServicioAndIdEstado(Long idServicio, Long idEstado);
+
 }
+
