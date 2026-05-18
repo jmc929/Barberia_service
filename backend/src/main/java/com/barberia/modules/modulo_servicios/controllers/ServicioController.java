@@ -68,5 +68,21 @@ public class ServicioController {
                     .body(ApiResponse.error(e.getMessage()));
         }
     }
+    
+    @DeleteMapping("/eliminar/{id}")
+    @PreAuthorize("hasAuthority('ROLE_1')")
+    public ResponseEntity<ApiResponse<Void>> eliminar(@PathVariable Long id) {
+        try {
+            servicioService.eliminar(id);
+
+            return ResponseEntity.ok(
+                    ApiResponse.success("Servicio eliminado exitosamente", null)
+            );
+
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST)
+                    .body(ApiResponse.error(e.getMessage()));
+        }
+    }
 
 }

@@ -6,6 +6,7 @@ import com.barberia.modules.modulo_servicios.repositories.ServicioRepository;
 import com.barberia.shared.exceptions.ResourceNotFoundException;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+import com.barberia.modules.modulo_citas.repositories.CitaRepository;
 
 import java.util.List;
 import java.util.stream.Collectors;
@@ -13,8 +14,13 @@ import java.util.stream.Collectors;
 @Service
 public class ServicioService {
 
+    private static final Long ESTADO_ACTIVO = 1L;
+
     @Autowired
     private ServicioRepository servicioRepository;
+
+    @Autowired
+    private CitaRepository citaRepository;
 
     public List<ServicioDTO> obtenerTodos() {
         return servicioRepository.findByIdEstado(1L)
@@ -64,7 +70,7 @@ public class ServicioService {
             servicio.setDescripcion(servicioDTO.getDescripcion());
         }
 
-        if (servicioDTO.getDuracion() != null) {
+        if (servicioDTO.getDuracion() != null && servicioDTO.getDuracion() > 0) {
             servicio.setDuracion(servicioDTO.getDuracion());
         }
 
@@ -75,5 +81,20 @@ public class ServicioService {
         Servicio actualizado = servicioRepository.save(servicio);
 
         return convertirADTO(actualizado);
+    }
+
+    public void eliminar(Long id) {
+        Servicio servicio = servicioRepository.findById(id)
+                .orElseThrow(() -> new ResourceNotFoundException(
+                        "Servicio no encontrado con id: " + id
+                ));
+
+        if (citaRepository.existsByIdServicioAndIdEstado(id, ESTADO_ACTIVO)) {
+            throw new IllegalStateException(
+                    "El servicio no se puede eliminar porque tiene citas activas asociadas."
+            );
+        }
+
+        servicioRepository.delete(servicio);
     }
 }
