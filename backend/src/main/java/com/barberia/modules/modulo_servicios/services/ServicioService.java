@@ -97,4 +97,17 @@ public class ServicioService {
 
         servicioRepository.delete(servicio);
     }
+
+    public ServicioDTO deshabilitar(Long id) {
+    Servicio servicio = servicioRepository.findById(id)
+            .orElseThrow(() -> new ResourceNotFoundException(
+                    "Servicio no encontrado con id: " + id
+            ));
+
+    servicio.setIdEstado(2L);
+
+    Servicio servicioActualizado = servicioRepository.save(servicio);
+
+    return convertirADTO(servicioActualizado);
+    }
 }

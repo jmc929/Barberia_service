@@ -68,7 +68,7 @@ public class ServicioController {
                     .body(ApiResponse.error(e.getMessage()));
         }
     }
-    
+
     @DeleteMapping("/eliminar/{id}")
     @PreAuthorize("hasAuthority('ROLE_1')")
     public ResponseEntity<ApiResponse<Void>> eliminar(@PathVariable Long id) {
@@ -85,4 +85,19 @@ public class ServicioController {
         }
     }
 
+    @PatchMapping("/deshabilitar/{id}")
+    @PreAuthorize("hasAuthority('ROLE_1')")
+    public ResponseEntity<ApiResponse<ServicioDTO>> deshabilitar(@PathVariable Long id) {
+        try {
+            ServicioDTO servicio = servicioService.deshabilitar(id);
+
+            return ResponseEntity.ok(
+                    ApiResponse.success("Servicio deshabilitado exitosamente", servicio)
+            );
+
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST)
+                    .body(ApiResponse.error(e.getMessage()));
+        }
+    }
 }
