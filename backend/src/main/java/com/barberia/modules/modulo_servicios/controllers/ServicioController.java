@@ -49,4 +49,24 @@ public class ServicioController {
         }
     }
 
+    @PutMapping("/actualizar/{id}")
+    @PreAuthorize("hasAuthority('ROLE_1')")
+    public ResponseEntity<ApiResponse<ServicioDTO>> actualizar(
+            @PathVariable Long id,
+            @RequestBody ServicioDTO servicioDTO) {
+        try {
+            ServicioDTO actualizado = servicioService.actualizar(id, servicioDTO);
+
+            return ResponseEntity.ok(
+                    ApiResponse.success(
+                            "Servicio actualizado exitosamente",
+                            actualizado
+                    )
+            );
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST)
+                    .body(ApiResponse.error(e.getMessage()));
+        }
+    }
+
 }

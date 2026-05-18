@@ -49,4 +49,31 @@ public class ServicioService {
                 .idEstado(servicio.getIdEstado())
                 .build();
     }
+
+    public ServicioDTO actualizar(Long id, ServicioDTO servicioDTO) {
+        Servicio servicio = servicioRepository.findById(id)
+                .orElseThrow(() -> new ResourceNotFoundException(
+                        "Servicio no encontrado con id: " + id
+                ));
+
+        if (servicioDTO.getNombreServicio() != null) {
+            servicio.setNombreServicio(servicioDTO.getNombreServicio());
+        }
+
+        if (servicioDTO.getDescripcion() != null) {
+            servicio.setDescripcion(servicioDTO.getDescripcion());
+        }
+
+        if (servicioDTO.getDuracion() != null) {
+            servicio.setDuracion(servicioDTO.getDuracion());
+        }
+
+        if (servicioDTO.getCosto() != null) {
+            servicio.setCosto(servicioDTO.getCosto());
+        }
+
+        Servicio actualizado = servicioRepository.save(servicio);
+
+        return convertirADTO(actualizado);
+    }
 }
