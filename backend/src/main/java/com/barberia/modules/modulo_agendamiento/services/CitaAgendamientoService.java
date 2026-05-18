@@ -134,6 +134,16 @@ public class CitaAgendamientoService {
         if (request.getNumeroDocumentoPeluquero() == null || request.getNumeroDocumentoPeluquero().isBlank()) {
             throw new IllegalArgumentException("numeroDocumentoPeluquero es requerido");
         }
+
+        Usuario peluquero = usuarioRepository.findByNumeroDocumento(request.getNumeroDocumentoPeluquero())
+                .orElseThrow(() -> new ResourceNotFoundException("Barbero no encontrado con documento: " + request.getNumeroDocumentoPeluquero()));
+        if (!peluquero.getIdRol().equals(2)) {
+            throw new IllegalArgumentException("No es barbero");
+        }
+        if (peluquero.getIdEstado() != null && peluquero.getIdEstado().equals(5)) {
+            throw new IllegalArgumentException("No se puede, el barbero esta deshabilitado");
+        }
+
         if (request.getIdServicio() == null) {
             throw new IllegalArgumentException("idServicio es requerido");
         }
