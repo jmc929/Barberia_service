@@ -9,7 +9,10 @@ import org.springframework.data.domain.PageRequest;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.security.core.Authentication;
 
+import java.util.Map;
 import java.util.List;
 
 @RestController
@@ -30,5 +33,30 @@ public class CitaController {
         return citaRepository.findById(noCita)
                 .map(c -> ResponseEntity.ok(ApiResponse.success("Cita obtenida", c)))
                 .orElseGet(() -> ResponseEntity.status(HttpStatus.NOT_FOUND).body(ApiResponse.error("Cita no encontrada")));
+    }
+
+    @GetMapping("/historial/{numeroDocumentoCliente}")
+    @PreAuthorize("hasAuthority('ROLE_1')")
+    public ResponseEntity<ApiResponse<List<Cita>>> historialClienteAdmin(
+            @PathVariable String numeroDocumentoCliente) {
+
+        List<Cita> citas = citaRepository.findByNumeroDocumentoCliente(numeroDocumentoCliente);
+
+        return ResponseEntity.ok(
+                ApiResponse.success("Historial de citas obtenido", citas)
+        );
+    }
+    @GetMapping("/mi-historial")
+    @PreAuthorize("hasAuthority('ROLE_3')")
+    public ResponseEntity<ApiResponse<List<Cita>>> miHistorial(Authentication authentication) {
+
+        Map<String, Object> details = (Map<String, Object>) authentication.getDetails();
+        String numeroDocumento = (String) details.get("numeroDocumento");
+
+        List<Cita> citas = citaRepository.findByNumeroDocumentoCliente(numeroDocumento);
+
+        return ResponseEntity.ok(
+                ApiResponse.success("Historial de citas obtenido", citas)
+        );
     }
 }
