@@ -11,6 +11,10 @@ import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
+import java.util.Map;
+import com.barberia.modules.modulo_usuarios.models.dtos.UpdatePerfilDTO;
+import org.springframework.security.core.Authentication;
+import java.util.Map;
 
 @RestController
 @RequestMapping("/api/v1/personas")
@@ -93,6 +97,25 @@ public class UsuarioController {
     public ResponseEntity<ApiResponse<List<UsuarioDTO>>> obtenerTodas() {
         List<UsuarioDTO> personas = usuarioService.obtenerTodas();
         return ResponseEntity.ok(ApiResponse.success("Personas obtenidas", personas));
+    }
+
+    /**
+     * PUT /api/personas/perfil
+     * Actualiza el perfil del usuario autenticado. Solo puede actualizar su propio perfil.
+     */
+    @PutMapping("/perfil")
+    public ResponseEntity<ApiResponse<UsuarioDTO>> actualizarPerfil(@RequestBody UpdatePerfilDTO request,
+                                                                     Authentication authentication) {
+        try {
+            @SuppressWarnings("unchecked")
+            String numeroDocumento = (String) ((Map<String, Object>) authentication.getDetails()).get("numeroDocumento");
+            UsuarioDTO actualizado = usuarioService.actualizarPerfil(numeroDocumento, request);
+            return ResponseEntity.ok(ApiResponse.success("Perfil actualizado exitosamente", actualizado));
+        } catch (IllegalArgumentException e) {
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(ApiResponse.error(e.getMessage()));
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(ApiResponse.error(e.getMessage()));
+        }
     }
 
     /**
