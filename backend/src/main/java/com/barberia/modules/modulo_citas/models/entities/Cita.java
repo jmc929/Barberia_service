@@ -27,4 +27,7 @@ public class Cita {
     private LocalTime horaFinCita;
     private Long idEstado;
     private Instant fechaCreacion;
+
+    // Fecha y hora en que la cita fue marcada como completada
+    private Instant fechaCompletado;
 }
