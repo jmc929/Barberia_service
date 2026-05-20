@@ -1,38 +1,29 @@
 package com.barberia.modules.modulo_horarios.dto;
 
 import jakarta.validation.constraints.NotNull;
-import jakarta.validation.constraints.Size;
-import java.time.DayOfWeek;
-import java.time.LocalTime;
-import java.util.List;
+import jakarta.validation.constraints.Pattern;
 
 /**
- * DTO para la actualización del horario laboral del peluquero.
+ * DTO para actualizar un horario puntual del peluquero.
  */
 public class ActualizarHorarioPeluqueroDTO {
     @NotNull
-    @Size(min = 1, max = 7)
-    private List<DiaHorario> dias;
+    private Long idDia;
 
-    public List<DiaHorario> getDias() { return dias; }
-    public void setDias(List<DiaHorario> dias) { this.dias = dias; }
+    @NotNull
+    @Pattern(regexp = "^([01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d$", message = "horaInicioHorario debe tener formato HH:mm:ss")
+    private String horaInicioHorario;
 
-    /**
-     * Clase interna para representar el horario de un día específico.
-     */
-    public static class DiaHorario {
-        @NotNull
-        private DayOfWeek diaSemana;
-        @NotNull
-        private LocalTime horaInicio;
-        @NotNull
-        private LocalTime horaFin;
+    @NotNull
+    @Pattern(regexp = "^([01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d$", message = "horaFinHorario debe tener formato HH:mm:ss")
+    private String horaFinHorario;
 
-        public DayOfWeek getDiaSemana() { return diaSemana; }
-        public void setDiaSemana(DayOfWeek diaSemana) { this.diaSemana = diaSemana; }
-        public LocalTime getHoraInicio() { return horaInicio; }
-        public void setHoraInicio(LocalTime horaInicio) { this.horaInicio = horaInicio; }
-        public LocalTime getHoraFin() { return horaFin; }
-        public void setHoraFin(LocalTime horaFin) { this.horaFin = horaFin; }
-    }
+    public Long getIdDia() { return idDia; }
+    public void setIdDia(Long idDia) { this.idDia = idDia; }
+
+    public String getHoraInicioHorario() { return horaInicioHorario; }
+    public void setHoraInicioHorario(String horaInicioHorario) { this.horaInicioHorario = horaInicioHorario; }
+
+    public String getHoraFinHorario() { return horaFinHorario; }
+    public void setHoraFinHorario(String horaFinHorario) { this.horaFinHorario = horaFinHorario; }
 }

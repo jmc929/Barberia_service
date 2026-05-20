@@ -12,4 +12,5 @@ import java.util.List;
 @Repository
 public interface HorarioPeluqueroRepository extends JpaRepository<HorarioPeluquero, Long> {
     List<HorarioPeluquero> findByNumeroDocumentoPeluquero(String numeroDocumentoPeluquero);
+    java.util.Optional<HorarioPeluquero> findByNumeroDocumentoPeluqueroAndIdDia(String numeroDocumentoPeluquero, Long idDia);
 }

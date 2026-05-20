@@ -10,10 +10,8 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
 
-import java.time.DayOfWeek;
 import java.time.LocalTime;
-import java.util.ArrayList;
-import java.util.List;
+import java.util.Optional;
 
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.Mockito.*;
@@ -36,46 +34,21 @@ public class HorarioPeluqueroServiceTest {
     @Test
     void testActualizarHorario_HoraInicioMayorQueFin() {
         ActualizarHorarioPeluqueroDTO dto = new ActualizarHorarioPeluqueroDTO();
-        List<ActualizarHorarioPeluqueroDTO.DiaHorario> dias = new ArrayList<>();
-        ActualizarHorarioPeluqueroDTO.DiaHorario dia = new ActualizarHorarioPeluqueroDTO.DiaHorario();
-        dia.setDiaSemana(DayOfWeek.MONDAY);
-        dia.setHoraInicio(LocalTime.of(18, 0));
-        dia.setHoraFin(LocalTime.of(8, 0));
-        dias.add(dia);
-        dto.setDias(dias);
-        assertThrows(HorarioInvalidoException.class, () -> horarioPeluqueroService.actualizarHorario("123", dto));
-    }
-
-    @Test
-    void testActualizarHorario_SolapamientoDias() {
-        ActualizarHorarioPeluqueroDTO dto = new ActualizarHorarioPeluqueroDTO();
-        List<ActualizarHorarioPeluqueroDTO.DiaHorario> dias = new ArrayList<>();
-        ActualizarHorarioPeluqueroDTO.DiaHorario dia1 = new ActualizarHorarioPeluqueroDTO.DiaHorario();
-        dia1.setDiaSemana(DayOfWeek.MONDAY);
-        dia1.setHoraInicio(LocalTime.of(8, 0));
-        dia1.setHoraFin(LocalTime.of(12, 0));
-        ActualizarHorarioPeluqueroDTO.DiaHorario dia2 = new ActualizarHorarioPeluqueroDTO.DiaHorario();
-        dia2.setDiaSemana(DayOfWeek.MONDAY);
-        dia2.setHoraInicio(LocalTime.of(13, 0));
-        dia2.setHoraFin(LocalTime.of(17, 0));
-        dias.add(dia1);
-        dias.add(dia2);
-        dto.setDias(dias);
+        dto.setIdDia(1L);
+        dto.setHoraInicioHorario("18:00:00");
+        dto.setHoraFinHorario("08:00:00");
         assertThrows(HorarioInvalidoException.class, () -> horarioPeluqueroService.actualizarHorario("123", dto));
     }
 
     @Test
     void testActualizarHorario_Exito() {
         ActualizarHorarioPeluqueroDTO dto = new ActualizarHorarioPeluqueroDTO();
-        List<ActualizarHorarioPeluqueroDTO.DiaHorario> dias = new ArrayList<>();
-        ActualizarHorarioPeluqueroDTO.DiaHorario dia = new ActualizarHorarioPeluqueroDTO.DiaHorario();
-        dia.setDiaSemana(DayOfWeek.TUESDAY);
-        dia.setHoraInicio(LocalTime.of(9, 0));
-        dia.setHoraFin(LocalTime.of(17, 0));
-        dias.add(dia);
-        dto.setDias(dias);
-        when(horarioPeluqueroRepository.findByNumeroDocumentoPeluquero(anyString())).thenReturn(new ArrayList<>());
+        dto.setIdDia(2L);
+        dto.setHoraInicioHorario("09:00:00");
+        dto.setHoraFinHorario("17:00:00");
+        when(horarioPeluqueroRepository.findByNumeroDocumentoPeluqueroAndIdDia(anyString(), anyLong()))
+                .thenReturn(Optional.empty());
         assertDoesNotThrow(() -> horarioPeluqueroService.actualizarHorario("123", dto));
-        verify(horarioPeluqueroRepository, times(1)).saveAll(anyList());
+        verify(horarioPeluqueroRepository, times(1)).save(any(HorarioPeluquero.class));
     }
 }

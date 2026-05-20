@@ -9,8 +9,8 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
+import java.time.LocalTime;
 import java.util.List;
-import java.util.stream.Collectors;
 
 /**
  * Servicio para la gestión del horario laboral del peluquero.
@@ -27,24 +27,24 @@ public class HorarioPeluqueroService {
      */
     @Transactional
     public void actualizarHorario(String numeroDocumentoPeluquero, ActualizarHorarioPeluqueroDTO dto) {
-        // Validación: no permitir horas inválidas ni solapamientos
         validarHorario(dto);
-        // Eliminar horarios anteriores
-        horarioPeluqueroRepository.findByNumeroDocumentoPeluquero(numeroDocumentoPeluquero)
-                .forEach(horarioPeluqueroRepository::delete);
-        // Guardar nuevos horarios
+
         LocalDateTime ahora = LocalDateTime.now();
-        List<HorarioPeluquero> nuevos = dto.getDias().stream().map(dia -> {
-            HorarioPeluquero h = new HorarioPeluquero();
-            h.setNumeroDocumentoPeluquero(numeroDocumentoPeluquero);
-            h.setIdDia((long) dia.getDiaSemana().getValue());
-            h.setHoraInicio(dia.getHoraInicio());
-            h.setHoraFin(dia.getHoraFin());
-            h.setFechaCreacion(ahora);
-            h.setFechaActualizacion(ahora);
-            return h;
-        }).collect(Collectors.toList());
-        horarioPeluqueroRepository.saveAll(nuevos);
+        HorarioPeluquero horario = horarioPeluqueroRepository
+                .findByNumeroDocumentoPeluqueroAndIdDia(numeroDocumentoPeluquero, dto.getIdDia())
+                .orElseGet(HorarioPeluquero::new);
+
+        if (horario.getFechaCreacion() == null) {
+            horario.setFechaCreacion(ahora);
+        }
+
+        horario.setNumeroDocumentoPeluquero(numeroDocumentoPeluquero);
+        horario.setIdDia(dto.getIdDia());
+        horario.setHoraInicio(LocalTime.parse(dto.getHoraInicioHorario()));
+        horario.setHoraFin(LocalTime.parse(dto.getHoraFinHorario()));
+        horario.setFechaActualizacion(ahora);
+
+        horarioPeluqueroRepository.save(horario);
     }
 
     /**
@@ -58,20 +58,10 @@ public class HorarioPeluqueroService {
      * Valida que los horarios sean correctos.
      */
     private void validarHorario(ActualizarHorarioPeluqueroDTO dto) {
-        for (ActualizarHorarioPeluqueroDTO.DiaHorario dia : dto.getDias()) {
-            if (dia.getHoraInicio().isAfter(dia.getHoraFin()) || dia.getHoraInicio().equals(dia.getHoraFin())) {
-                throw new HorarioInvalidoException("La hora de inicio debe ser menor que la de fin para el día " + dia.getDiaSemana());
-            }
-            // Aquí podrías validar contra el horario del local si tienes acceso a esa info
-        }
-        // Validar solapamientos
-        List<ActualizarHorarioPeluqueroDTO.DiaHorario> dias = dto.getDias();
-        for (int i = 0; i < dias.size(); i++) {
-            for (int j = i + 1; j < dias.size(); j++) {
-                if (dias.get(i).getDiaSemana() == dias.get(j).getDiaSemana()) {
-                    throw new HorarioInvalidoException("No puede haber más de un rango horario por día");
-                }
-            }
+        LocalTime horaInicio = LocalTime.parse(dto.getHoraInicioHorario());
+        LocalTime horaFin = LocalTime.parse(dto.getHoraFinHorario());
+        if (horaInicio.isAfter(horaFin) || horaInicio.equals(horaFin)) {
+            throw new HorarioInvalidoException("La hora de inicio debe ser menor que la de fin");
         }
     }
 }
