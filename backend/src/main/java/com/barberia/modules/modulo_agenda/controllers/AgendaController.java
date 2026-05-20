@@ -9,6 +9,7 @@ import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.Map;
 import java.util.List;
 
 @RestController
@@ -19,23 +20,25 @@ public class AgendaController {
     private AgendaService agendaService;
 
     /**
-     * Agenda completa para administradores.
-     */
-    @GetMapping("/todas")
-    @PreAuthorize("hasAuthority('ROLE_ADMIN')")
-    public ResponseEntity<ApiResponse<List<AgendaResponseDTO>>> agendaCompleta() {
-        List<AgendaResponseDTO> agenda = agendaService.obtenerAgendaCompleta();
-        return ResponseEntity.ok(ApiResponse.success("Agenda completa obtenida", agenda));
-    }
-
-    /**
      * Agenda del peluquero autenticado.
      */
     @GetMapping("/mis-citas")
-    @PreAuthorize("hasAuthority('ROLE_PELUQUERO')")
+    @PreAuthorize("hasAuthority('ROLE_2')")
     public ResponseEntity<ApiResponse<List<AgendaResponseDTO>>> miAgenda(Authentication authentication) {
-        String numeroDocumento = (String) authentication.getName();
+        String numeroDocumento = obtenerNumeroDocumento(authentication);
         List<AgendaResponseDTO> agenda = agendaService.obtenerAgendaPeluquero(numeroDocumento);
         return ResponseEntity.ok(ApiResponse.success("Agenda obtenida", agenda));
+    }
+
+    @SuppressWarnings("unchecked")
+    private String obtenerNumeroDocumento(Authentication authentication) {
+        Object details = authentication.getDetails();
+        if (details instanceof Map<?, ?> detailsMap) {
+            Object numeroDocumento = detailsMap.get("numeroDocumento");
+            if (numeroDocumento != null) {
+                return numeroDocumento.toString();
+            }
+        }
+        return authentication.getName();
     }
 }

@@ -17,10 +17,10 @@ public class CompletarCitaController {
     private CompletarCitaService completarCitaService;
 
     /**
-     * Endpoint para que el peluquero marque una cita como completada.
+     * Endpoint para que el barbero (idRol = 2) marque una cita como completada.
      */
     @PostMapping("/completar")
-    @PreAuthorize("hasAuthority('ROLE_PELUQUERO')")
+    @PreAuthorize("hasAuthority('ROLE_2')")
     public ResponseEntity<ApiResponse<CompletarCitaResponseDTO>> completarCita(@RequestBody CompletarCitaRequestDTO request, Authentication authentication) {
         CompletarCitaResponseDTO response = completarCitaService.completarCita(request, authentication);
         return ResponseEntity.ok(ApiResponse.success("Cita completada", response));

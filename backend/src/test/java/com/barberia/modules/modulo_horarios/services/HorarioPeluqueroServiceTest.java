@@ -43,7 +43,7 @@ public class HorarioPeluqueroServiceTest {
         dia.setHoraFin(LocalTime.of(8, 0));
         dias.add(dia);
         dto.setDias(dias);
-        assertThrows(HorarioInvalidoException.class, () -> horarioPeluqueroService.actualizarHorario(1L, dto));
+        assertThrows(HorarioInvalidoException.class, () -> horarioPeluqueroService.actualizarHorario("123", dto));
     }
 
     @Test
@@ -61,7 +61,7 @@ public class HorarioPeluqueroServiceTest {
         dias.add(dia1);
         dias.add(dia2);
         dto.setDias(dias);
-        assertThrows(HorarioInvalidoException.class, () -> horarioPeluqueroService.actualizarHorario(1L, dto));
+        assertThrows(HorarioInvalidoException.class, () -> horarioPeluqueroService.actualizarHorario("123", dto));
     }
 
     @Test
@@ -74,8 +74,8 @@ public class HorarioPeluqueroServiceTest {
         dia.setHoraFin(LocalTime.of(17, 0));
         dias.add(dia);
         dto.setDias(dias);
-        when(horarioPeluqueroRepository.findByPeluqueroId(anyLong())).thenReturn(new ArrayList<>());
-        assertDoesNotThrow(() -> horarioPeluqueroService.actualizarHorario(1L, dto));
+        when(horarioPeluqueroRepository.findByNumeroDocumentoPeluquero(anyString())).thenReturn(new ArrayList<>());
+        assertDoesNotThrow(() -> horarioPeluqueroService.actualizarHorario("123", dto));
         verify(horarioPeluqueroRepository, times(1)).saveAll(anyList());
     }
 }

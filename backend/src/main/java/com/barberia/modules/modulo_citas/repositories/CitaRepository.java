@@ -22,6 +22,7 @@ public interface CitaRepository extends JpaRepository<Cita, Long> {
 
     boolean existsByIdServicioAndIdEstado(Long idServicio, Long idEstado);
     List<Cita> findByNumeroDocumentoCliente(String numeroDocumentoCliente);
+    List<Cita> findByNumeroDocumentoPeluqueroAndIdEstadoOrderByFechaCitaAscHoraInicioCitaAsc(String numeroDocumentoPeluquero, Long idEstado);
 
 }
 

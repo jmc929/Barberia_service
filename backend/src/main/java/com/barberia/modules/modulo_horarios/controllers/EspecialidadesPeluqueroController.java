@@ -4,11 +4,13 @@ import com.barberia.modules.modulo_horarios.dto.ActualizarEspecialidadesPeluquer
 import com.barberia.modules.modulo_horarios.services.EspecialidadesPeluqueroService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 
 import jakarta.validation.Valid;
-import java.security.Principal;
+import org.springframework.security.core.Authentication;
+import java.util.Map;
 
 /**
  * Controlador REST para la actualización de especialidades del peluquero.
@@ -21,21 +23,28 @@ public class EspecialidadesPeluqueroController {
     private EspecialidadesPeluqueroService especialidadesPeluqueroService;
 
     /**
-     * Endpoint para actualizar las especialidades del peluquero autenticado.
+     * Endpoint para asociar un servicio al peluquero autenticado.
      */
     @PutMapping("/actualizar")
-    public ResponseEntity<?> actualizarEspecialidades(@Valid @RequestBody ActualizarEspecialidadesPeluqueroDTO dto, Principal principal) {
-        Long peluqueroId = obtenerIdDesdePrincipal(principal);
-        especialidadesPeluqueroService.actualizarEspecialidades(peluqueroId, dto);
-        return ResponseEntity.ok("Especialidades actualizadas correctamente");
+    @PreAuthorize("hasAuthority('ROLE_2')")
+    public ResponseEntity<?> actualizarEspecialidades(@Valid @RequestBody ActualizarEspecialidadesPeluqueroDTO dto, Authentication authentication) {
+        String numeroDocumentoPeluquero = obtenerNumeroDocumento(authentication);
+        especialidadesPeluqueroService.asociarServicio(numeroDocumentoPeluquero, dto.getIdServicio());
+        return ResponseEntity.ok("Servicio asociado correctamente al peluquero");
     }
 
     /**
-     * Método auxiliar para obtener el ID del usuario autenticado.
-     * Debes implementar la lógica real según tu sistema de autenticación.
+     * Obtiene el numeroDocumento desde los detalles del JWT.
      */
-    private Long obtenerIdDesdePrincipal(Principal principal) {
-        // TODO: Implementar obtención real del ID del usuario
-        return Long.valueOf(principal.getName()); // Ajustar según tu sistema
+    @SuppressWarnings("unchecked")
+    private String obtenerNumeroDocumento(Authentication authentication) {
+        Object details = authentication.getDetails();
+        if (details instanceof Map<?, ?> detailsMap) {
+            Object numeroDocumento = detailsMap.get("numeroDocumento");
+            if (numeroDocumento != null) {
+                return numeroDocumento.toString();
+            }
+        }
+        return authentication.getName();
     }
 }

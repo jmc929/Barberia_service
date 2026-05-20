@@ -8,7 +8,6 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.time.DayOfWeek;
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.stream.Collectors;
@@ -27,18 +26,18 @@ public class HorarioPeluqueroService {
      * @param dto DTO con los nuevos horarios
      */
     @Transactional
-    public void actualizarHorario(Long peluqueroId, ActualizarHorarioPeluqueroDTO dto) {
+    public void actualizarHorario(String numeroDocumentoPeluquero, ActualizarHorarioPeluqueroDTO dto) {
         // Validación: no permitir horas inválidas ni solapamientos
         validarHorario(dto);
         // Eliminar horarios anteriores
-        horarioPeluqueroRepository.findByPeluqueroId(peluqueroId)
+        horarioPeluqueroRepository.findByNumeroDocumentoPeluquero(numeroDocumentoPeluquero)
                 .forEach(horarioPeluqueroRepository::delete);
         // Guardar nuevos horarios
         LocalDateTime ahora = LocalDateTime.now();
         List<HorarioPeluquero> nuevos = dto.getDias().stream().map(dia -> {
             HorarioPeluquero h = new HorarioPeluquero();
-            h.setPeluqueroId(peluqueroId);
-            h.setDiaSemana(dia.getDiaSemana());
+            h.setNumeroDocumentoPeluquero(numeroDocumentoPeluquero);
+            h.setIdDia((long) dia.getDiaSemana().getValue());
             h.setHoraInicio(dia.getHoraInicio());
             h.setHoraFin(dia.getHoraFin());
             h.setFechaCreacion(ahora);
@@ -51,8 +50,8 @@ public class HorarioPeluqueroService {
     /**
      * Obtiene el horario laboral del peluquero.
      */
-    public List<HorarioPeluquero> obtenerHorario(Long peluqueroId) {
-        return horarioPeluqueroRepository.findByPeluqueroId(peluqueroId);
+    public List<HorarioPeluquero> obtenerHorario(String numeroDocumentoPeluquero) {
+        return horarioPeluqueroRepository.findByNumeroDocumentoPeluquero(numeroDocumentoPeluquero);
     }
 
     /**

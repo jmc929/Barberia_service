@@ -5,11 +5,13 @@ import com.barberia.modules.modulo_horarios.models.HorarioPeluquero;
 import com.barberia.modules.modulo_horarios.services.HorarioPeluqueroService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 
 import jakarta.validation.Valid;
-import java.security.Principal;
+import org.springframework.security.core.Authentication;
+import java.util.Map;
 import java.util.List;
 
 /**
@@ -26,10 +28,10 @@ public class HorarioPeluqueroController {
      * Endpoint para actualizar el horario laboral del peluquero autenticado.
      */
     @PutMapping("/actualizar")
-    public ResponseEntity<?> actualizarHorario(@Valid @RequestBody ActualizarHorarioPeluqueroDTO dto, Principal principal) {
-        // Aquí deberías obtener el ID del peluquero autenticado desde el principal
-        Long peluqueroId = obtenerIdDesdePrincipal(principal);
-        horarioPeluqueroService.actualizarHorario(peluqueroId, dto);
+    @PreAuthorize("hasAuthority('ROLE_2')")
+    public ResponseEntity<?> actualizarHorario(@Valid @RequestBody ActualizarHorarioPeluqueroDTO dto, Authentication authentication) {
+        String numeroDocumentoPeluquero = obtenerNumeroDocumento(authentication);
+        horarioPeluqueroService.actualizarHorario(numeroDocumentoPeluquero, dto);
         return ResponseEntity.ok("Horario actualizado correctamente");
     }
 
@@ -37,19 +39,25 @@ public class HorarioPeluqueroController {
      * Endpoint para consultar el horario laboral del peluquero autenticado.
      */
     @GetMapping
-    public ResponseEntity<List<HorarioPeluquero>> obtenerHorario(Principal principal) {
-        Long peluqueroId = obtenerIdDesdePrincipal(principal);
-        List<HorarioPeluquero> horario = horarioPeluqueroService.obtenerHorario(peluqueroId);
+    @PreAuthorize("hasAuthority('ROLE_2')")
+    public ResponseEntity<List<HorarioPeluquero>> obtenerHorario(Authentication authentication) {
+        String numeroDocumentoPeluquero = obtenerNumeroDocumento(authentication);
+        List<HorarioPeluquero> horario = horarioPeluqueroService.obtenerHorario(numeroDocumentoPeluquero);
         return ResponseEntity.ok(horario);
     }
 
     /**
-     * Método auxiliar para obtener el ID del usuario autenticado.
-     * Debes implementar la lógica real según tu sistema de autenticación.
+     * Obtiene el numeroDocumento desde los detalles del JWT.
      */
-    private Long obtenerIdDesdePrincipal(Principal principal) {
-        // TODO: Implementar obtención real del ID del usuario
-        // Por ejemplo, si principal.getName() es el username, buscar el usuario y devolver su ID
-        return Long.valueOf(principal.getName()); // Ajustar según tu sistema
+    @SuppressWarnings("unchecked")
+    private String obtenerNumeroDocumento(Authentication authentication) {
+        Object details = authentication.getDetails();
+        if (details instanceof Map<?, ?> detailsMap) {
+            Object numeroDocumento = detailsMap.get("numeroDocumento");
+            if (numeroDocumento != null) {
+                return numeroDocumento.toString();
+            }
+        }
+        return authentication.getName();
     }
 }

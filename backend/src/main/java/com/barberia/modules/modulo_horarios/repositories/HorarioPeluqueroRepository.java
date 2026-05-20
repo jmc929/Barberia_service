@@ -4,7 +4,6 @@ import com.barberia.modules.modulo_horarios.models.HorarioPeluquero;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
 
-import java.time.DayOfWeek;
 import java.util.List;
 
 /**
@@ -12,6 +11,5 @@ import java.util.List;
  */
 @Repository
 public interface HorarioPeluqueroRepository extends JpaRepository<HorarioPeluquero, Long> {
-    List<HorarioPeluquero> findByPeluqueroId(Long peluqueroId);
-    List<HorarioPeluquero> findByPeluqueroIdAndDiaSemana(Long peluqueroId, DayOfWeek diaSemana);
+    List<HorarioPeluquero> findByNumeroDocumentoPeluquero(String numeroDocumentoPeluquero);
 }

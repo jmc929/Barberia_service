@@ -1,38 +1,50 @@
 package com.barberia.modules.modulo_horarios.services;
 
 import com.barberia.modules.modulo_horarios.dto.ActualizarEspecialidadesPeluqueroDTO;
-import org.springframework.beans.factory.annotation.Autowired;
+import com.barberia.modules.modulo_servicios.repositories.ServicioRepository;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import jakarta.persistence.EntityManager;
 import jakarta.persistence.PersistenceContext;
 
+import java.util.Objects;
+
 /**
- * Servicio para la actualización de especialidades (servicios) del peluquero.
- * No modifica lógica existente, solo actualiza la relación entre peluquero y servicios.
+ * Servicio para asociar servicios a un peluquero.
  */
 @Service
 public class EspecialidadesPeluqueroService {
     @PersistenceContext
     private EntityManager entityManager;
 
+    @jakarta.annotation.Resource
+    private ServicioRepository servicioRepository;
+
     /**
-     * Actualiza las especialidades del peluquero.
-     * @param peluqueroId ID del peluquero
-     * @param dto DTO con los IDs de especialidades
+     * Asocia un servicio al peluquero autenticado.
+     * @param numeroDocumentoPeluquero documento del peluquero autenticado
+     * @param idServicio id del servicio a asociar
      */
     @Transactional
-    public void actualizarEspecialidades(Long peluqueroId, ActualizarEspecialidadesPeluqueroDTO dto) {
-        // Elimina relaciones actuales
-        entityManager.createNativeQuery("DELETE FROM peluquero_servicio WHERE peluquero_id = :peluqueroId")
-                .setParameter("peluqueroId", peluqueroId)
-                .executeUpdate();
-        // Inserta nuevas relaciones
-        for (Long especialidadId : dto.getEspecialidadesIds()) {
-            entityManager.createNativeQuery("INSERT INTO peluquero_servicio (peluquero_id, servicio_id) VALUES (:peluqueroId, :servicioId)")
-                    .setParameter("peluqueroId", peluqueroId)
-                    .setParameter("servicioId", especialidadId)
-                    .executeUpdate();
+    public void asociarServicio(String numeroDocumentoPeluquero, Long idServicio) {
+        if (numeroDocumentoPeluquero == null || numeroDocumentoPeluquero.isBlank()) {
+            throw new IllegalArgumentException("numeroDocumentoPeluquero es requerido");
         }
+        Objects.requireNonNull(idServicio, "idServicio es requerido");
+        if (!servicioRepository.existsById(idServicio)) {
+            throw new IllegalArgumentException("Servicio no encontrado con id: " + idServicio);
+        }
+
+        entityManager.createNativeQuery(
+                        "INSERT INTO tbl_servicios_por_peluquero (numero_documento_peluquero, id_servicio) " +
+                        "SELECT :numeroDocumentoPeluquero, :idServicio " +
+                        "WHERE NOT EXISTS (" +
+                        "  SELECT 1 FROM tbl_servicios_por_peluquero " +
+                        "  WHERE numero_documento_peluquero = :numeroDocumentoPeluquero " +
+                        "    AND id_servicio = :idServicio" +
+                        ")")
+                .setParameter("numeroDocumentoPeluquero", numeroDocumentoPeluquero)
+                .setParameter("idServicio", idServicio)
+                .executeUpdate();
     }
 }

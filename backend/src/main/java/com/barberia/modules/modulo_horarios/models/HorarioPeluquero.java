@@ -2,30 +2,29 @@ package com.barberia.modules.modulo_horarios.models;
 
 import jakarta.persistence.*;
 import java.time.LocalTime;
-import java.time.DayOfWeek;
 import java.time.LocalDateTime;
 
 /**
  * Entidad que representa el horario laboral de un peluquero para un día específico.
  */
 @Entity
-@Table(name = "horario_peluquero")
+@Table(name = "tbl_horarios_peluqueros")
 public class HorarioPeluquero {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Long id;
+    @Column(name = "id_horarios_peluqueros")
+    private Long idHorariosPeluqueros;
 
-    @Column(name = "peluquero_id", nullable = false)
-    private Long peluqueroId;
+    @Column(name = "numero_documento_peluquero", nullable = false)
+    private String numeroDocumentoPeluquero;
 
-    @Enumerated(EnumType.STRING)
-    @Column(name = "dia_semana", nullable = false)
-    private DayOfWeek diaSemana;
+    @Column(name = "id_dia", nullable = false)
+    private Long idDia;
 
-    @Column(name = "hora_inicio", nullable = false)
+    @Column(name = "hora_inicio_horario", nullable = false)
     private LocalTime horaInicio;
 
-    @Column(name = "hora_fin", nullable = false)
+    @Column(name = "hora_fin_horario", nullable = false)
     private LocalTime horaFin;
 
     @Column(name = "fecha_creacion", nullable = false)
@@ -35,14 +34,14 @@ public class HorarioPeluquero {
     private LocalDateTime fechaActualizacion;
 
     // Getters y setters
-    public Long getId() { return id; }
-    public void setId(Long id) { this.id = id; }
+    public Long getIdHorariosPeluqueros() { return idHorariosPeluqueros; }
+    public void setIdHorariosPeluqueros(Long idHorariosPeluqueros) { this.idHorariosPeluqueros = idHorariosPeluqueros; }
 
-    public Long getPeluqueroId() { return peluqueroId; }
-    public void setPeluqueroId(Long peluqueroId) { this.peluqueroId = peluqueroId; }
+    public String getNumeroDocumentoPeluquero() { return numeroDocumentoPeluquero; }
+    public void setNumeroDocumentoPeluquero(String numeroDocumentoPeluquero) { this.numeroDocumentoPeluquero = numeroDocumentoPeluquero; }
 
-    public DayOfWeek getDiaSemana() { return diaSemana; }
-    public void setDiaSemana(DayOfWeek diaSemana) { this.diaSemana = diaSemana; }
+    public Long getIdDia() { return idDia; }
+    public void setIdDia(Long idDia) { this.idDia = idDia; }
 
     public LocalTime getHoraInicio() { return horaInicio; }
     public void setHoraInicio(LocalTime horaInicio) { this.horaInicio = horaInicio; }

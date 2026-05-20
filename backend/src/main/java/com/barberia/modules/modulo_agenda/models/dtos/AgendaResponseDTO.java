@@ -16,5 +16,7 @@ public class AgendaResponseDTO {
     private LocalTime horaInicio;
     private LocalTime horaFin;
     private String nombreCliente;
+    private Long idServicio;
     private String nombreServicio;
+    private String estado;
 }

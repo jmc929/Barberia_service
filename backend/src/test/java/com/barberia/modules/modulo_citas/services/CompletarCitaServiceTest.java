@@ -2,7 +2,6 @@ package com.barberia.modules.modulo_citas.services;
 
 import com.barberia.modules.modulo_citas.dto.CompletarCitaRequestDTO;
 import com.barberia.modules.modulo_citas.dto.CompletarCitaResponseDTO;
-import com.barberia.modules.modulo_citas.enums.EstadoCita;
 import com.barberia.modules.modulo_citas.models.entities.Cita;
 import com.barberia.modules.modulo_citas.repositories.CitaRepository;
 import org.junit.jupiter.api.BeforeEach;
@@ -12,10 +11,8 @@ import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
 import org.springframework.security.core.Authentication;
 
-import java.time.Instant;
-import java.time.LocalDate;
-import java.time.LocalTime;
 import java.util.Optional;
+import java.util.Map;
 
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.Mockito.*;
@@ -38,15 +35,16 @@ class CompletarCitaServiceTest {
         Cita cita = Cita.builder()
                 .noCita(1L)
                 .numeroDocumentoPeluquero("123")
-                .idEstado((long) EstadoCita.valueOf("CONFIRMADA").ordinal())
+                .idEstado(5L)
                 .build();
         CompletarCitaRequestDTO request = new CompletarCitaRequestDTO();
         request.setIdCita(1L);
         when(citaRepository.findById(1L)).thenReturn(Optional.of(cita));
-        when(authentication.getName()).thenReturn("123");
+        when(authentication.getDetails()).thenReturn(Map.of("numeroDocumento", "123"));
         CompletarCitaResponseDTO response = completarCitaService.completarCita(request, authentication);
+        assertEquals("5", response.getEstadoAnterior());
+        assertEquals(6L, cita.getIdEstado());
         assertEquals("COMPLETADA", response.getEstadoActual());
-        assertNotNull(response.getFechaCompletado());
     }
 
     @Test
@@ -54,12 +52,12 @@ class CompletarCitaServiceTest {
         Cita cita = Cita.builder()
                 .noCita(2L)
                 .numeroDocumentoPeluquero("999")
-                .idEstado((long) EstadoCita.valueOf("CONFIRMADA").ordinal())
+                .idEstado(1L)
                 .build();
         CompletarCitaRequestDTO request = new CompletarCitaRequestDTO();
         request.setIdCita(2L);
         when(citaRepository.findById(2L)).thenReturn(Optional.of(cita));
-        when(authentication.getName()).thenReturn("123");
+        when(authentication.getDetails()).thenReturn(Map.of("numeroDocumento", "123"));
         assertThrows(SecurityException.class, () -> completarCitaService.completarCita(request, authentication));
     }
 
@@ -68,13 +66,14 @@ class CompletarCitaServiceTest {
         Cita cita = Cita.builder()
                 .noCita(3L)
                 .numeroDocumentoPeluquero("123")
-                .idEstado((long) EstadoCita.valueOf("CANCELADA").ordinal())
+                .idEstado(4L)
                 .build();
         CompletarCitaRequestDTO request = new CompletarCitaRequestDTO();
         request.setIdCita(3L);
         when(citaRepository.findById(3L)).thenReturn(Optional.of(cita));
-        when(authentication.getName()).thenReturn("123");
-        assertThrows(IllegalStateException.class, () -> completarCitaService.completarCita(request, authentication));
+        when(authentication.getDetails()).thenReturn(Map.of("numeroDocumento", "123"));
+        CompletarCitaResponseDTO response = completarCitaService.completarCita(request, authentication);
+        assertEquals("4", response.getEstadoAnterior());
     }
 
     @Test
@@ -82,7 +81,7 @@ class CompletarCitaServiceTest {
         CompletarCitaRequestDTO request = new CompletarCitaRequestDTO();
         request.setIdCita(99L);
         when(citaRepository.findById(99L)).thenReturn(Optional.empty());
-        when(authentication.getName()).thenReturn("123");
+        when(authentication.getDetails()).thenReturn(Map.of("numeroDocumento", "123"));
         assertThrows(IllegalArgumentException.class, () -> completarCitaService.completarCita(request, authentication));
     }
 }
