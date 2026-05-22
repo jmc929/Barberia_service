@@ -4,9 +4,6 @@ import jakarta.persistence.*;
 import java.time.LocalTime;
 import java.time.LocalDateTime;
 
-/**
- * Entidad que representa el horario laboral de un peluquero para un día específico.
- */
 @Entity
 @Table(name = "tbl_horarios_peluqueros")
 public class HorarioPeluquero {
@@ -33,7 +30,6 @@ public class HorarioPeluquero {
     @Column(name = "fecha_actualizacion", nullable = false)
     private LocalDateTime fechaActualizacion;
 
-    // Getters y setters
     public Long getIdHorariosPeluqueros() { return idHorariosPeluqueros; }
     public void setIdHorariosPeluqueros(Long idHorariosPeluqueros) { this.idHorariosPeluqueros = idHorariosPeluqueros; }
 

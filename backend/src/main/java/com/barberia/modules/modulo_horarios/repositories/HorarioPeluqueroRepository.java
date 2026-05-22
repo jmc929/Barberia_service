@@ -6,9 +6,6 @@ import org.springframework.stereotype.Repository;
 
 import java.util.List;
 
-/**
- * Repositorio para la entidad HorarioPeluquero.
- */
 @Repository
 public interface HorarioPeluqueroRepository extends JpaRepository<HorarioPeluquero, Long> {
     List<HorarioPeluquero> findByNumeroDocumentoPeluquero(String numeroDocumentoPeluquero);

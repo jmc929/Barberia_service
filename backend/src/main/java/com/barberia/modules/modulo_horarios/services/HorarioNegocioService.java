@@ -5,7 +5,6 @@ import com.barberia.modules.modulo_horarios.models.dtos.HorarioUpdateDTO;
 import com.barberia.modules.modulo_horarios.models.entities.HorarioNegocio;
 import com.barberia.modules.modulo_horarios.repositories.HorarioNegocioRepository;
 import com.barberia.shared.exceptions.ResourceNotFoundException;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalTime;
@@ -16,8 +15,11 @@ import java.util.stream.Collectors;
 @Service
 public class HorarioNegocioService {
 
-    @Autowired
-    private HorarioNegocioRepository horarioNegocioRepository;
+    private final HorarioNegocioRepository horarioNegocioRepository;
+
+    public HorarioNegocioService(HorarioNegocioRepository horarioNegocioRepository) {
+        this.horarioNegocioRepository = horarioNegocioRepository;
+    }
 
     public List<HorarioNegocioDTO> obtenerTodos() {
         return horarioNegocioRepository.findAllByOrderByIdDiaAsc()

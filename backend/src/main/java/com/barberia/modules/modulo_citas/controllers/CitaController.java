@@ -3,9 +3,6 @@ package com.barberia.modules.modulo_citas.controllers;
 import com.barberia.modules.modulo_citas.models.entities.Cita;
 import com.barberia.modules.modulo_citas.repositories.CitaRepository;
 import com.barberia.shared.utils.ApiResponse;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.data.domain.Page;
-import org.springframework.data.domain.PageRequest;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -17,18 +14,22 @@ import java.util.List;
 
 @RestController
 @RequestMapping("/api/v1/citas")
-@CrossOrigin(origins = "*", maxAge = 3600)
 public class CitaController {
 
-    @Autowired
-    private CitaRepository citaRepository;
+    private final CitaRepository citaRepository;
+
+    public CitaController(CitaRepository citaRepository) {
+        this.citaRepository = citaRepository;
+    }
 
     @GetMapping
+    @PreAuthorize("hasAuthority('ROLE_1')")
     public ResponseEntity<ApiResponse<List<Cita>>> obtenerTodas() {
         List<Cita> citas = citaRepository.findAll();
         return ResponseEntity.ok(ApiResponse.success("Citas obtenidas", citas));
     }
     @GetMapping("/buscar/{noCita}")
+    @PreAuthorize("hasAuthority('ROLE_1')")
     public ResponseEntity<ApiResponse<Cita>> obtenerPorId(@PathVariable Long noCita) {
         return citaRepository.findById(noCita)
                 .map(c -> ResponseEntity.ok(ApiResponse.success("Cita obtenida", c)))
@@ -49,14 +50,23 @@ public class CitaController {
     @GetMapping("/mi-historial")
     @PreAuthorize("hasAuthority('ROLE_3')")
     public ResponseEntity<ApiResponse<List<Cita>>> miHistorial(Authentication authentication) {
-
-        Map<String, Object> details = (Map<String, Object>) authentication.getDetails();
-        String numeroDocumento = (String) details.get("numeroDocumento");
+        String numeroDocumento = obtenerNumeroDocumento(authentication);
 
         List<Cita> citas = citaRepository.findByNumeroDocumentoCliente(numeroDocumento);
 
         return ResponseEntity.ok(
                 ApiResponse.success("Historial de citas obtenido", citas)
         );
+    }
+
+    private String obtenerNumeroDocumento(Authentication authentication) {
+        Object details = authentication.getDetails();
+        if (details instanceof Map<?, ?> detailsMap) {
+            Object numeroDocumento = detailsMap.get("numeroDocumento");
+            if (numeroDocumento != null) {
+                return numeroDocumento.toString();
+            }
+        }
+        return authentication.getName();
     }
 }

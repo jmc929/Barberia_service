@@ -3,9 +3,6 @@ package com.barberia.modules.modulo_horarios.dto;
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Pattern;
 
-/**
- * DTO para actualizar un horario puntual del peluquero.
- */
 public class ActualizarHorarioPeluqueroDTO {
     @NotNull
     private Long idDia;

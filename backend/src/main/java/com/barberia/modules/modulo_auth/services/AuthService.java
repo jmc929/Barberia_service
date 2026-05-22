@@ -6,30 +6,24 @@ import com.barberia.modules.modulo_usuarios.models.dtos.UsuarioDTO;
 import com.barberia.modules.modulo_usuarios.models.entities.Usuario;
 import com.barberia.modules.modulo_usuarios.repositories.UsuarioRepository;
 import com.barberia.shared.security.JwtTokenProvider;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
 @Service
 public class AuthService {
 
-    @Autowired
-    private UsuarioRepository usuarioRepository;
+    private final UsuarioRepository usuarioRepository;
 
-    @Autowired
-    private PasswordEncoder passwordEncoder;
+    private final PasswordEncoder passwordEncoder;
 
-    @Autowired
-    private JwtTokenProvider jwtTokenProvider;
+    private final JwtTokenProvider jwtTokenProvider;
 
-    /**
-     * Autentica un usuario con email y contraseña
-     * Devuelve JWT token si la autenticación es exitosa
-     * 
-     * @param loginDTO contiene email y contraseña
-     * @return LoginResponseDTO con token y datos del usuario
-     * @throws IllegalArgumentException si credenciales son inválidas
-     */
+    public AuthService(UsuarioRepository usuarioRepository, PasswordEncoder passwordEncoder, JwtTokenProvider jwtTokenProvider) {
+        this.usuarioRepository = usuarioRepository;
+        this.passwordEncoder = passwordEncoder;
+        this.jwtTokenProvider = jwtTokenProvider;
+    }
+
     public LoginResponseDTO iniciarSesion(LoginDTO loginDTO) {
         Usuario usuario = usuarioRepository.findByEmail(loginDTO.getEmail())
             .orElseThrow(() -> new IllegalArgumentException("Error: Credenciales inválidas"));
@@ -49,9 +43,6 @@ public class AuthService {
             .build();
     }
 
-    /**
-     * Convierte Entity Usuario a DTO (sin exponer contraseña hasheada)
-     */
     private UsuarioDTO convertirADTO(Usuario usuario) {
         return UsuarioDTO.builder()
             .numeroDocumento(usuario.getNumeroDocumento())

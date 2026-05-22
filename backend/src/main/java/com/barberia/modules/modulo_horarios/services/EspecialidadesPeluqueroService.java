@@ -9,9 +9,6 @@ import jakarta.persistence.PersistenceContext;
 
 import java.util.Objects;
 
-/**
- * Servicio para asociar servicios a un peluquero.
- */
 @Service
 public class EspecialidadesPeluqueroService {
     @PersistenceContext
@@ -20,11 +17,6 @@ public class EspecialidadesPeluqueroService {
     @jakarta.annotation.Resource
     private ServicioRepository servicioRepository;
 
-    /**
-     * Asocia un servicio al peluquero autenticado.
-     * @param numeroDocumentoPeluquero documento del peluquero autenticado
-     * @param idServicio id del servicio a asociar
-     */
     @Transactional
     public void asociarServicio(String numeroDocumentoPeluquero, Long idServicio) {
         if (numeroDocumentoPeluquero == null || numeroDocumentoPeluquero.isBlank()) {

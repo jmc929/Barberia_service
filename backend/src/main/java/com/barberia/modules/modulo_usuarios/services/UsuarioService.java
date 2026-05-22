@@ -5,7 +5,6 @@ import com.barberia.modules.modulo_usuarios.models.dtos.UsuarioDTO;
 import com.barberia.modules.modulo_usuarios.models.entities.Usuario;
 import com.barberia.modules.modulo_usuarios.repositories.UsuarioRepository;
 import com.barberia.shared.exceptions.ResourceNotFoundException;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
@@ -15,11 +14,14 @@ import java.util.stream.Collectors;
 @Service
 public class UsuarioService {
 
-    @Autowired
-    private UsuarioRepository usuarioRepository;
+    private final UsuarioRepository usuarioRepository;
 
-    @Autowired
-    private PasswordEncoder passwordEncoder;
+    private final PasswordEncoder passwordEncoder;
+
+    public UsuarioService(UsuarioRepository usuarioRepository, PasswordEncoder passwordEncoder) {
+        this.usuarioRepository = usuarioRepository;
+        this.passwordEncoder = passwordEncoder;
+    }
 
     /**
      * Registra una nueva persona con contraseña

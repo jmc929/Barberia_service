@@ -4,9 +4,6 @@ import lombok.*;
 import java.time.LocalDate;
 import java.time.LocalTime;
 
-/**
- * DTO de respuesta para la agenda de citas de peluquero.
- */
 @Data
 @Builder
 @NoArgsConstructor
