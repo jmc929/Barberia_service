@@ -4,18 +4,19 @@ import com.barberia.modules.modulo_auth.models.dtos.LoginDTO;
 import com.barberia.modules.modulo_auth.models.dtos.LoginResponseDTO;
 import com.barberia.modules.modulo_auth.services.AuthService;
 import com.barberia.shared.utils.ApiResponse;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 @RestController
 @RequestMapping("/api/v1/auth")
-@CrossOrigin(origins = "*", maxAge = 3600)
 public class AuthController {
 
-    @Autowired
-    private AuthService authService;
+    private final AuthService authService;
+
+    public AuthController(AuthService authService) {
+        this.authService = authService;
+    }
 
     /**
      * POST /api/auth/login

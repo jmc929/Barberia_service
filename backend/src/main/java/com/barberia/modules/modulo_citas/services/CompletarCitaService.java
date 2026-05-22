@@ -4,7 +4,6 @@ import com.barberia.modules.modulo_citas.dto.CompletarCitaRequestDTO;
 import com.barberia.modules.modulo_citas.dto.CompletarCitaResponseDTO;
 import com.barberia.modules.modulo_citas.models.entities.Cita;
 import com.barberia.modules.modulo_citas.repositories.CitaRepository;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.core.Authentication;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -14,8 +13,11 @@ import java.util.Map;
 
 @Service
 public class CompletarCitaService {
-    @Autowired
-    private CitaRepository citaRepository;
+    private final CitaRepository citaRepository;
+
+    public CompletarCitaService(CitaRepository citaRepository) {
+        this.citaRepository = citaRepository;
+    }
 
     /**
      * Marca una cita como completada si cumple las reglas de negocio.
@@ -35,7 +37,6 @@ public class CompletarCitaService {
 
         String estadoAnterior = cita.getIdEstado() == null ? "DESCONOCIDO" : String.valueOf(cita.getIdEstado());
 
-        // Marcar la cita como completada usando el estado 6
         cita.setIdEstado(6L);
         citaRepository.save(cita);
         return CompletarCitaResponseDTO.builder()
@@ -46,7 +47,6 @@ public class CompletarCitaService {
                 .build();
     }
 
-    @SuppressWarnings("unchecked")
     private String obtenerNumeroDocumento(Authentication authentication) {
         Object details = authentication.getDetails();
         if (details instanceof Map<?, ?> detailsMap) {

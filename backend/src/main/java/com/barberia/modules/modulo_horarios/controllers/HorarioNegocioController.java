@@ -4,7 +4,6 @@ import com.barberia.modules.modulo_horarios.models.dtos.HorarioNegocioDTO;
 import com.barberia.modules.modulo_horarios.models.dtos.HorarioUpdateDTO;
 import com.barberia.modules.modulo_horarios.services.HorarioNegocioService;
 import com.barberia.shared.utils.ApiResponse;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
@@ -14,11 +13,13 @@ import java.util.List;
 
 @RestController
 @RequestMapping("/api/v1/horarios")
-@CrossOrigin(origins = "*", maxAge = 3600)
 public class HorarioNegocioController {
 
-    @Autowired
-    private HorarioNegocioService horarioNegocioService;
+    private final HorarioNegocioService horarioNegocioService;
+
+    public HorarioNegocioController(HorarioNegocioService horarioNegocioService) {
+        this.horarioNegocioService = horarioNegocioService;
+    }
 
     @GetMapping
     public ResponseEntity<ApiResponse<List<HorarioNegocioDTO>>> obtenerTodos() {

@@ -4,7 +4,6 @@ import com.barberia.modules.modulo_usuarios.models.dtos.RegistroDTO;
 import com.barberia.modules.modulo_usuarios.models.dtos.UsuarioDTO;
 import com.barberia.modules.modulo_usuarios.services.UsuarioService;
 import com.barberia.shared.utils.ApiResponse;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
@@ -14,15 +13,16 @@ import java.util.List;
 import java.util.Map;
 import com.barberia.modules.modulo_usuarios.models.dtos.UpdatePerfilDTO;
 import org.springframework.security.core.Authentication;
-import java.util.Map;
 
 @RestController
 @RequestMapping("/api/v1/personas")
-@CrossOrigin(origins = "*", maxAge = 3600)
 public class UsuarioController {
 
-    @Autowired
-    private UsuarioService usuarioService;
+    private final UsuarioService usuarioService;
+
+    public UsuarioController(UsuarioService usuarioService) {
+        this.usuarioService = usuarioService;
+    }
 
     /**
      * POST /api/personas/registro
@@ -107,8 +107,7 @@ public class UsuarioController {
     public ResponseEntity<ApiResponse<UsuarioDTO>> actualizarPerfil(@RequestBody UpdatePerfilDTO request,
                                                                      Authentication authentication) {
         try {
-            @SuppressWarnings("unchecked")
-            String numeroDocumento = (String) ((Map<String, Object>) authentication.getDetails()).get("numeroDocumento");
+            String numeroDocumento = obtenerNumeroDocumento(authentication);
             UsuarioDTO actualizado = usuarioService.actualizarPerfil(numeroDocumento, request);
             return ResponseEntity.ok(ApiResponse.success("Perfil actualizado exitosamente", actualizado));
         } catch (IllegalArgumentException e) {
@@ -231,6 +230,17 @@ public class UsuarioController {
             return ResponseEntity.status(HttpStatus.NOT_FOUND)
                 .body(ApiResponse.error(e.getMessage()));
         }
+    }
+
+    private String obtenerNumeroDocumento(Authentication authentication) {
+        Object details = authentication.getDetails();
+        if (details instanceof Map<?, ?> detailsMap) {
+            Object numeroDocumento = detailsMap.get("numeroDocumento");
+            if (numeroDocumento != null) {
+                return numeroDocumento.toString();
+            }
+        }
+        return authentication.getName();
     }
 }
 
