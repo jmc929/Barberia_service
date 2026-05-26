@@ -17,7 +17,7 @@ import java.util.List;
  * Controlador REST para la gestión del horario laboral del peluquero.
  */
 @RestController
-@RequestMapping("/api/v1/horario-peluquero")
+@RequestMapping("/api/v1/horarios-peluqueros")
 @Validated
 public class HorarioPeluqueroController {
     private final HorarioPeluqueroService horarioPeluqueroService;
