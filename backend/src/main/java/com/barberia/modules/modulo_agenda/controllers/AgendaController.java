@@ -16,7 +16,7 @@ import java.util.Map;
 import java.util.List;
 
 @RestController
-@RequestMapping("/api/v1/agenda")
+@RequestMapping("/api/v1/agendas")
 public class AgendaController {
     private final AgendaService agendaService;
 

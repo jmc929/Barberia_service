@@ -15,7 +15,7 @@ import java.util.Map;
  * Controlador REST para la actualización de especialidades del peluquero.
  */
 @RestController
-@RequestMapping("/api/v1/especialidades-peluquero")
+@RequestMapping("/api/v1/especialidades-peluqueros")
 @Validated
 public class EspecialidadesPeluqueroController {
     private final EspecialidadesPeluqueroService especialidadesPeluqueroService;
