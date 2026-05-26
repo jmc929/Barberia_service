@@ -27,6 +27,9 @@ public class AgendaService {
         this.servicioRepository = servicioRepository;
     }
 
+    /**
+     * Obtiene la agenda de un peluquero por su documento.
+     */
     public List<AgendaResponseDTO> obtenerAgendaPeluquero(String numeroDocumentoPeluquero) {
         List<Cita> citas = citaRepository
                 .findByNumeroDocumentoPeluqueroAndIdEstadoOrderByFechaCitaAscHoraInicioCitaAsc(numeroDocumentoPeluquero, ESTADO_ACTIVO);
@@ -42,14 +45,15 @@ public class AgendaService {
         String nombreServicio = servicio != null ? servicio.getNombreServicio() : "Desconocido";
 
         return AgendaResponseDTO.builder()
-                .fecha(cita.getFechaCita())
-                .horaInicio(cita.getHoraInicioCita())
-                .horaFin(cita.getHoraFinCita())
-                .nombreCliente(nombreCliente)
-                .idServicio(cita.getIdServicio())
-                .nombreServicio(nombreServicio)
-                .estado(obtenerNombreEstado(cita.getIdEstado()))
-                .build();
+            .noCita(cita.getNoCita())
+            .fecha(cita.getFechaCita())
+            .horaInicio(cita.getHoraInicioCita())
+            .horaFin(cita.getHoraFinCita())
+            .nombreCliente(nombreCliente)
+            .idServicio(cita.getIdServicio())
+            .nombreServicio(nombreServicio)
+            .estado(obtenerNombreEstado(cita.getIdEstado()))
+            .build();
     }
 
     private String obtenerNombreEstado(Long idEstado) {

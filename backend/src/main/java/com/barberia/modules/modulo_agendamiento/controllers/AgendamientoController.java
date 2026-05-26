@@ -3,6 +3,8 @@ package com.barberia.modules.modulo_agendamiento.controllers;
 import com.barberia.modules.modulo_agendamiento.models.dtos.*;
 import com.barberia.modules.modulo_agendamiento.services.CitaAgendamientoService;
 import com.barberia.shared.utils.ApiResponse;
+import org.springframework.hateoas.EntityModel;
+import static org.springframework.hateoas.server.mvc.WebMvcLinkBuilder.*;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
@@ -34,12 +36,21 @@ public class AgendamientoController {
     }
 
     @PostMapping("/agendar")
-    public ResponseEntity<ApiResponse<CitaDTO>> agendar(@RequestBody CitaCreateDTO request,
+    public ResponseEntity<ApiResponse<EntityModel<CitaDTO>>> agendar(@RequestBody CitaCreateDTO request,
                                                         Authentication authentication) {
         try {
             String numeroDocumentoCliente = obtenerNumeroDocumento(authentication);
             CitaDTO creado = citaAgendamientoService.agendar(request, numeroDocumentoCliente);
-            return ResponseEntity.status(HttpStatus.CREATED).body(ApiResponse.success("Cita agendada", creado));
+
+                EntityModel<CitaDTO> model = EntityModel.of(creado,
+                    linkTo(methodOn(AgendamientoController.class).agendar(request, authentication)).withRel("autorreferencia"),
+                    linkTo(methodOn(com.barberia.modules.modulo_citas.controllers.CitaController.class).obtenerPorId(creado.getNoCita())).withRel("ver cita"),
+                    linkTo(methodOn(AgendamientoController.class).cancelar(creado.getNoCita(), null, authentication)).withRel("cancelar cita").withType("POST"),
+                    linkTo(methodOn(AgendamientoController.class).reprogramar(creado.getNoCita(), null, authentication)).withRel("reprogramar cita").withType("PUT"),
+                    linkTo(methodOn(AgendamientoController.class).confirmar(creado.getNoCita(), authentication)).withRel("confirmar cita").withType("PUT")
+                );
+
+            return ResponseEntity.status(HttpStatus.CREATED).body(ApiResponse.success("Cita agendada", model));
         } catch (IllegalArgumentException e) {
             return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(ApiResponse.error(e.getMessage()));
         } catch (Exception e) {

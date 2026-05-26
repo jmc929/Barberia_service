@@ -12,6 +12,7 @@ public class AgendaResponseDTO {
     private LocalDate fecha;
     private LocalTime horaInicio;
     private LocalTime horaFin;
+    private Long noCita;
     private String nombreCliente;
     private Long idServicio;
     private String nombreServicio;
