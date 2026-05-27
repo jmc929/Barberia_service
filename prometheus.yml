@@ -1,0 +1,73 @@
+# Configuración de Prometheus
+# Este archivo define:
+# - Configuración global de scraping
+# - Job para monitorear la aplicación Barberia Service
+# - Retención de datos
+
+global:
+  # Intervalo por defecto para scrapear métricas
+  scrape_interval: 15s
+  
+  # Timeout para cada scrape request
+  scrape_timeout: 10s
+  
+  # Intervalo de evaluación de reglas de alertas (no aplicado aún)
+  evaluation_interval: 15s
+  
+  # Etiquetas globales agregadas a todas las métricas
+  external_labels:
+    monitor: 'barberia-prometheus'
+    environment: 'development'
+
+# Configuración de scraping - Define qué endpoints monitorear
+scrape_configs:
+  # Job 1: Prometheus a sí mismo (para meta-monitoreo)
+  - job_name: 'prometheus'
+    static_configs:
+      - targets: ['localhost:9090']
+
+  # Job 2: Barberia API - Scrapeará /actuator/prometheus
+  # IMPORTANTE: 'barberia-api' es el nombre del servicio en docker-compose
+  # Docker DNS interno resuelve 'barberia-api' al contenedor correcto
+  - job_name: 'barberia-api'
+    metrics_path: '/api/actuator/prometheus'
+    scrape_interval: 15s
+    scrape_timeout: 10s
+    
+    static_configs:
+      # El puerto 8080 es INTERNO del contenedor
+      # Docker network permite acceso directo entre contenedores
+      - targets: ['barberia-api:8080']
+        labels:
+          service: 'barberia-service'
+          version: '1.0.0'
+          environment: 'development'
+    
+    # Relabeling: Transforma las etiquetas de las métricas
+    # Aquí se pueden filtrar, renombrar o agregar etiquetas
+    relabel_configs:
+      # Agregar etiqueta 'instance_type' a todas las métricas de este job
+      - source_labels: [__address__]
+        target_label: instance_type
+        replacement: 'java-app'
+      
+      # Agregar etiqueta 'monitoring' con valor 'enabled'
+      - target_label: monitoring
+        replacement: 'enabled'
+    
+    # Metric relabeling: Filtrar métricas específicas
+    metric_relabel_configs:
+      # Opcional: Descartar métricas de bajo valor (ahorra espacio)
+      # - source_labels: [__name__]
+      #   regex: 'process_.*|jvm_threads_current'
+      #   action: 'drop'
+
+# Configuración de alertas (opcional, no implementado aún)
+# alerting:
+#   alertmanagers:
+#     - static_configs:
+#         - targets: []
+
+# Archivos de reglas de alertas (opcional, no implementado aún)
+# rule_files:
+#   - "alert_rules.yml"
