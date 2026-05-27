@@ -4,7 +4,6 @@ import com.barberia.modules.modulo_horarios.dto.ActualizarHorarioPeluqueroDTO;
 import com.barberia.modules.modulo_horarios.exceptions.HorarioInvalidoException;
 import com.barberia.modules.modulo_horarios.models.HorarioPeluquero;
 import com.barberia.modules.modulo_horarios.repositories.HorarioPeluqueroRepository;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -17,14 +16,12 @@ import java.util.List;
  */
 @Service
 public class HorarioPeluqueroService {
-    @Autowired
-    private HorarioPeluqueroRepository horarioPeluqueroRepository;
+    private final HorarioPeluqueroRepository horarioPeluqueroRepository;
 
-    /**
-     * Actualiza el horario laboral del peluquero.
-     * @param peluqueroId ID del peluquero
-     * @param dto DTO con los nuevos horarios
-     */
+    public HorarioPeluqueroService(HorarioPeluqueroRepository horarioPeluqueroRepository) {
+        this.horarioPeluqueroRepository = horarioPeluqueroRepository;
+    }
+
     @Transactional
     public void actualizarHorario(String numeroDocumentoPeluquero, ActualizarHorarioPeluqueroDTO dto) {
         validarHorario(dto);

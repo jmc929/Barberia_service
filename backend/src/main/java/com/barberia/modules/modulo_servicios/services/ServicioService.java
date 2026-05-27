@@ -4,7 +4,6 @@ import com.barberia.modules.modulo_servicios.models.dtos.ServicioDTO;
 import com.barberia.modules.modulo_servicios.models.entities.Servicio;
 import com.barberia.modules.modulo_servicios.repositories.ServicioRepository;
 import com.barberia.shared.exceptions.ResourceNotFoundException;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import com.barberia.modules.modulo_citas.repositories.CitaRepository;
 
@@ -16,11 +15,14 @@ public class ServicioService {
 
     private static final Long ESTADO_ACTIVO = 1L;
 
-    @Autowired
-    private ServicioRepository servicioRepository;
+    private final ServicioRepository servicioRepository;
 
-    @Autowired
-    private CitaRepository citaRepository;
+    private final CitaRepository citaRepository;
+
+    public ServicioService(ServicioRepository servicioRepository, CitaRepository citaRepository) {
+        this.servicioRepository = servicioRepository;
+        this.citaRepository = citaRepository;
+    }
 
     public List<ServicioDTO> obtenerTodos() {
         return servicioRepository.findByIdEstado(1L)

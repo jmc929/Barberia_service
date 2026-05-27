@@ -8,7 +8,6 @@ import com.barberia.modules.modulo_servicios.models.entities.Servicio;
 import com.barberia.modules.modulo_servicios.repositories.ServicioRepository;
 import com.barberia.modules.modulo_usuarios.repositories.UsuarioRepository;
 import com.barberia.modules.modulo_usuarios.models.entities.Usuario;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
@@ -18,13 +17,15 @@ import java.util.stream.Collectors;
 public class AgendaService {
     private static final Long ESTADO_ACTIVO = 1L;
 
-    @Autowired
-    private CitaRepository citaRepository;
-    @Autowired
-    private UsuarioRepository usuarioRepository;
+    private final CitaRepository citaRepository;
+    private final UsuarioRepository usuarioRepository;
+    private final ServicioRepository servicioRepository;
 
-    @Autowired
-    private ServicioRepository servicioRepository;
+    public AgendaService(CitaRepository citaRepository, UsuarioRepository usuarioRepository, ServicioRepository servicioRepository) {
+        this.citaRepository = citaRepository;
+        this.usuarioRepository = usuarioRepository;
+        this.servicioRepository = servicioRepository;
+    }
 
     /**
      * Obtiene la agenda de un peluquero por su documento.
@@ -44,14 +45,15 @@ public class AgendaService {
         String nombreServicio = servicio != null ? servicio.getNombreServicio() : "Desconocido";
 
         return AgendaResponseDTO.builder()
-                .fecha(cita.getFechaCita())
-                .horaInicio(cita.getHoraInicioCita())
-                .horaFin(cita.getHoraFinCita())
-                .nombreCliente(nombreCliente)
-                .idServicio(cita.getIdServicio())
-                .nombreServicio(nombreServicio)
-                .estado(obtenerNombreEstado(cita.getIdEstado()))
-                .build();
+            .noCita(cita.getNoCita())
+            .fecha(cita.getFechaCita())
+            .horaInicio(cita.getHoraInicioCita())
+            .horaFin(cita.getHoraFinCita())
+            .nombreCliente(nombreCliente)
+            .idServicio(cita.getIdServicio())
+            .nombreServicio(nombreServicio)
+            .estado(obtenerNombreEstado(cita.getIdEstado()))
+            .build();
     }
 
     private String obtenerNombreEstado(Long idEstado) {

@@ -1,7 +1,6 @@
 package com.barberia.modules.modulo_agendamiento.repositories;
 
 import com.barberia.modules.modulo_agendamiento.models.entities.Cita;
-import com.barberia.modules.modulo_citas.enums.EstadoCita;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;

@@ -3,7 +3,6 @@ package com.barberia.modules.modulo_horarios.controllers;
 import com.barberia.modules.modulo_horarios.dto.ActualizarHorarioPeluqueroDTO;
 import com.barberia.modules.modulo_horarios.models.HorarioPeluquero;
 import com.barberia.modules.modulo_horarios.services.HorarioPeluqueroService;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.validation.annotation.Validated;
@@ -18,11 +17,14 @@ import java.util.List;
  * Controlador REST para la gestión del horario laboral del peluquero.
  */
 @RestController
-@RequestMapping("/api/v1/horario-peluquero")
+@RequestMapping("/api/v1/horarios-peluqueros")
 @Validated
 public class HorarioPeluqueroController {
-    @Autowired
-    private HorarioPeluqueroService horarioPeluqueroService;
+    private final HorarioPeluqueroService horarioPeluqueroService;
+
+    public HorarioPeluqueroController(HorarioPeluqueroService horarioPeluqueroService) {
+        this.horarioPeluqueroService = horarioPeluqueroService;
+    }
 
     /**
      * Endpoint para actualizar el horario laboral del peluquero autenticado.
@@ -46,10 +48,6 @@ public class HorarioPeluqueroController {
         return ResponseEntity.ok(horario);
     }
 
-    /**
-     * Obtiene el numeroDocumento desde los detalles del JWT.
-     */
-    @SuppressWarnings("unchecked")
     private String obtenerNumeroDocumento(Authentication authentication) {
         Object details = authentication.getDetails();
         if (details instanceof Map<?, ?> detailsMap) {

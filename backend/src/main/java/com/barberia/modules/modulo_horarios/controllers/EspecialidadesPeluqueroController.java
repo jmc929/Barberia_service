@@ -2,7 +2,6 @@ package com.barberia.modules.modulo_horarios.controllers;
 
 import com.barberia.modules.modulo_horarios.dto.ActualizarEspecialidadesPeluqueroDTO;
 import com.barberia.modules.modulo_horarios.services.EspecialidadesPeluqueroService;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.validation.annotation.Validated;
@@ -16,11 +15,14 @@ import java.util.Map;
  * Controlador REST para la actualización de especialidades del peluquero.
  */
 @RestController
-@RequestMapping("/api/v1/especialidades-peluquero")
+@RequestMapping("/api/v1/especialidades-peluqueros")
 @Validated
 public class EspecialidadesPeluqueroController {
-    @Autowired
-    private EspecialidadesPeluqueroService especialidadesPeluqueroService;
+    private final EspecialidadesPeluqueroService especialidadesPeluqueroService;
+
+    public EspecialidadesPeluqueroController(EspecialidadesPeluqueroService especialidadesPeluqueroService) {
+        this.especialidadesPeluqueroService = especialidadesPeluqueroService;
+    }
 
     /**
      * Endpoint para asociar un servicio al peluquero autenticado.
