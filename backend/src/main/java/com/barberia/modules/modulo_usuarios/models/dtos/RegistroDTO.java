@@ -9,6 +9,7 @@ import lombok.NoArgsConstructor;
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
+@SuppressWarnings("java:S116")
 public class RegistroDTO {
     private String numeroDocumento;
     private String numeroCelular;

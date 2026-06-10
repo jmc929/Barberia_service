@@ -29,7 +29,7 @@ public class EspecialidadesPeluqueroController {
      */
     @PutMapping("/actualizar")
     @PreAuthorize("hasAuthority('ROLE_2')")
-    public ResponseEntity<?> actualizarEspecialidades(@Valid @RequestBody ActualizarEspecialidadesPeluqueroDTO dto, Authentication authentication) {
+    public ResponseEntity<String> actualizarEspecialidades(@Valid @RequestBody ActualizarEspecialidadesPeluqueroDTO dto, Authentication authentication) {
         String numeroDocumentoPeluquero = obtenerNumeroDocumento(authentication);
         especialidadesPeluqueroService.asociarServicio(numeroDocumentoPeluquero, dto.getIdServicio());
         return ResponseEntity.ok("Servicio asociado correctamente al peluquero");

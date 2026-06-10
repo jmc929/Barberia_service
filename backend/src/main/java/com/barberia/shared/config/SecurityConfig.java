@@ -11,6 +11,7 @@ import org.springframework.security.config.annotation.web.configuration.EnableWe
 import org.springframework.security.config.http.SessionCreationPolicy;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
+import org.springframework.security.web.util.matcher.AntPathRequestMatcher;
 import org.springframework.web.cors.CorsConfiguration;
 import org.springframework.web.cors.CorsConfigurationSource;
 import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
@@ -38,15 +39,19 @@ public class SecurityConfig {
             .csrf(csrf -> csrf.disable())
             .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
             .authorizeHttpRequests(authz -> authz
-                // Permitir registro sin autenticación
-                .requestMatchers(HttpMethod.POST, "/api/v1/personas/registro").permitAll()
-                // Permitir login sin autenticación
-                .requestMatchers(HttpMethod.POST, "/api/v1/auth/login").permitAll()
-                // Permitir documentación Swagger sin auth
-                .requestMatchers("/api/swagger-ui.html", "/api/swagger-ui/**", "/api/v3/api-docs", "/api/v3/api-docs/**").permitAll()
-                .requestMatchers("/swagger-ui.html", "/swagger-ui/**", "/v3/api-docs", "/v3/api-docs/**").permitAll()
-                .requestMatchers("/webjars/**").permitAll()
-                // El resto de endpoints requieren autenticación
+                .requestMatchers(AntPathRequestMatcher.antMatcher(HttpMethod.POST, "/api/v1/personas/registro")).permitAll()
+                .requestMatchers(AntPathRequestMatcher.antMatcher(HttpMethod.POST, "/api/v1/auth/login")).permitAll()
+                .requestMatchers(
+                    AntPathRequestMatcher.antMatcher("/api/swagger-ui.html"),
+                    AntPathRequestMatcher.antMatcher("/api/swagger-ui/**"),
+                    AntPathRequestMatcher.antMatcher("/api/v3/api-docs"),
+                    AntPathRequestMatcher.antMatcher("/api/v3/api-docs/**"),
+                    AntPathRequestMatcher.antMatcher("/swagger-ui.html"),
+                    AntPathRequestMatcher.antMatcher("/swagger-ui/**"),
+                    AntPathRequestMatcher.antMatcher("/v3/api-docs"),
+                    AntPathRequestMatcher.antMatcher("/v3/api-docs/**"),
+                    AntPathRequestMatcher.antMatcher("/webjars/**")
+                ).permitAll()
                 .anyRequest().authenticated()
             );
 

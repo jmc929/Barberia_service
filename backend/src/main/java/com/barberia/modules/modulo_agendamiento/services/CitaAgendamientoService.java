@@ -5,15 +5,10 @@ import com.barberia.modules.modulo_agendamiento.models.dtos.CitaDTO;
 import com.barberia.modules.modulo_agendamiento.models.dtos.CitaDisponibilidadRequestDTO;
 import com.barberia.modules.modulo_agendamiento.models.dtos.CitaDisponibilidadResponseDTO;
 import com.barberia.modules.modulo_agendamiento.models.dtos.CitaReprogramarDTO;
-import com.barberia.modules.modulo_agendamiento.models.dtos.CancelarCitaDTO;
 import com.barberia.modules.modulo_agendamiento.models.entities.Cita;
 import com.barberia.modules.modulo_agendamiento.repositories.CitaRepository;
-import com.barberia.modules.modulo_horarios.models.dtos.HorarioNegocioDTO;
-import com.barberia.modules.modulo_horarios.repositories.HorarioNegocioRepository;
-import com.barberia.modules.modulo_usuarios.models.entities.Usuario;
-import com.barberia.modules.modulo_usuarios.repositories.UsuarioRepository;
 import com.barberia.shared.exceptions.ResourceNotFoundException;
-import org.springframework.dao.CannotSerializeTransactionException;
+import org.springframework.dao.CannotSerializeTransactionException; // NOSONAR - deprecated but still functional
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Isolation;
 import org.springframework.transaction.annotation.Transactional;
@@ -28,52 +23,21 @@ public class CitaAgendamientoService {
 
     private static final long ESTADO_ACTIVO = 1L;
     private static final long ESTADO_CANCELADA = 3L;
+    private static final String CITA_NO_ENCONTRADA = "Cita no encontrada para noCita: ";
 
     private final CitaRepository citaRepository;
-    private final HorarioNegocioRepository horarioNegocioRepository;
-    private final UsuarioRepository usuarioRepository;
+    private final CitaAgendamientoValidator validator;
 
-    public CitaAgendamientoService(CitaRepository citaRepository, HorarioNegocioRepository horarioNegocioRepository, UsuarioRepository usuarioRepository) {
+    public CitaAgendamientoService(CitaRepository citaRepository, CitaAgendamientoValidator validator) {
         this.citaRepository = citaRepository;
-        this.horarioNegocioRepository = horarioNegocioRepository;
-        this.usuarioRepository = usuarioRepository;
-    }
-
-    private long calcularIdDia(LocalDate fechaCita) {
-        return fechaCita.getDayOfWeek().getValue();
-    }
-
-    private HorarioNegocioDTO obtenerHorarioParaFecha(LocalDate fechaCita) {
-        long idDia = calcularIdDia(fechaCita);
-        return horarioNegocioRepository.findByIdDia(idDia)
-                .map(horario -> HorarioNegocioDTO.builder()
-                        .idHorarioNegocio(horario.getIdHorarioNegocio())
-                        .idDia(horario.getIdDia())
-                        .horaApertura(horario.getHoraApertura())
-                        .horaCierre(horario.getHoraCierre())
-                        .localAbierto(horario.getLocalAbierto())
-                        .build())
-                .orElseThrow(() -> new ResourceNotFoundException("Horario no encontrado para el día: " + idDia));
-    }
-
-    private void validarHorarioNegocio(LocalDate fechaCita, LocalTime horaInicio, LocalTime horaFin) {
-        HorarioNegocioDTO horario = obtenerHorarioParaFecha(fechaCita);
-        if (horario.getLocalAbierto() == null || !horario.getLocalAbierto()) {
-            throw new IllegalArgumentException("El local no está abierto para la fecha seleccionada");
-        }
-        if (horaInicio.isBefore(horario.getHoraApertura())) {
-            throw new IllegalArgumentException("La hora de inicio está fuera del horario de apertura");
-        }
-        if (horaFin.isAfter(horario.getHoraCierre())) {
-            throw new IllegalArgumentException("La cita excede el horario de cierre");
-        }
+        this.validator = validator;
     }
 
     public CitaDisponibilidadResponseDTO consultarDisponibilidad(CitaDisponibilidadRequestDTO request) {
-        validarSolicitudDisponibilidad(request);
+        validator.validarSolicitudDisponibilidad(request);
 
         LocalTime horaFin = request.getHoraFinCita();
-        validarHorarioNegocio(request.getFechaCita(), request.getHoraInicioCita(), horaFin);
+        validator.validarHorarioNegocio(request.getFechaCita(), request.getHoraInicioCita(), horaFin);
 
         List<Cita> conflictos = buscarConflictos(
                 request.getNumeroDocumentoPeluquero(),
@@ -100,7 +64,7 @@ public class CitaAgendamientoService {
         for (int intento = 0; intento <= reintentos; intento++) {
             try {
                 return agendarImpl(request, numeroDocumentoCliente);
-            } catch (CannotSerializeTransactionException ex) {
+            } catch (CannotSerializeTransactionException ex) { // NOSONAR - deprecated but still functional
                 if (intento == reintentos) {
                     throw ex;
                 }
@@ -110,13 +74,13 @@ public class CitaAgendamientoService {
     }
 
     private CitaDTO agendarImpl(CitaCreateDTO request, String numeroDocumentoCliente) {
-        validarSolicitudAgendamiento(request, numeroDocumentoCliente);
+        validator.validarSolicitudAgendamiento(request, numeroDocumentoCliente);
 
-        obtenerClienteActivo(numeroDocumentoCliente);
-        obtenerPeluqueroActivo(request.getNumeroDocumentoPeluquero());
+        validator.obtenerClienteActivo(numeroDocumentoCliente);
+        validator.obtenerPeluqueroActivo(request.getNumeroDocumentoPeluquero());
 
         LocalTime horaFin = request.getHoraFinCita();
-        validarHorarioNegocio(request.getFechaCita(), request.getHoraInicioCita(), horaFin);
+        validator.validarHorarioNegocio(request.getFechaCita(), request.getHoraInicioCita(), horaFin);
 
         List<Cita> conflictos = buscarConflictosParaAgendar(
                 request.getNumeroDocumentoPeluquero(),
@@ -134,15 +98,15 @@ public class CitaAgendamientoService {
 
     @Transactional
     public CitaDTO cancelar(Long noCita, String motivoCancelacion, String numeroDocumentoSolicitante) {
-        validarNoCita(noCita);
+        validator.validarNoCita(noCita);
         if (motivoCancelacion == null || motivoCancelacion.isBlank()) {
             throw new IllegalArgumentException("motivoCancelacion es requerido");
         }
 
         Cita cita = citaRepository.findById(noCita)
-                .orElseThrow(() -> new ResourceNotFoundException("Cita no encontrada para noCita: " + noCita));
+                .orElseThrow(() -> new ResourceNotFoundException(CITA_NO_ENCONTRADA + noCita));
 
-        validarPermisoGestionCita(cita, numeroDocumentoSolicitante, "No tienes permiso para cancelar esta cita");
+        validator.validarPermisoGestionCita(cita, numeroDocumentoSolicitante, "No tienes permiso para cancelar esta cita");
 
         if (cita.getIdEstado() == null || cita.getIdEstado() != ESTADO_ACTIVO) {
             throw new IllegalArgumentException("La cita no está activa o ya fue gestionada");
@@ -159,7 +123,7 @@ public class CitaAgendamientoService {
         for (int intento = 0; intento <= reintentos; intento++) {
             try {
                 return reprogramarImpl(noCita, request, numeroDocumentoCliente);
-            } catch (CannotSerializeTransactionException ex) {
+            } catch (CannotSerializeTransactionException ex) { // NOSONAR - deprecated but still functional
                 if (intento == reintentos) {
                     throw ex;
                 }
@@ -169,20 +133,20 @@ public class CitaAgendamientoService {
     }
 
     private CitaDTO reprogramarImpl(Long noCita, CitaReprogramarDTO request, String numeroDocumentoCliente) {
-        validarNoCita(noCita);
-        validarSolicitudReprogramacion(request, numeroDocumentoCliente);
+        validator.validarNoCita(noCita);
+        validator.validarSolicitudReprogramacion(request, numeroDocumentoCliente);
 
         Cita cita = citaRepository.findById(noCita)
-                .orElseThrow(() -> new ResourceNotFoundException("Cita no encontrada para noCita: " + noCita));
+                .orElseThrow(() -> new ResourceNotFoundException(CITA_NO_ENCONTRADA + noCita));
 
-        validarPermisoGestionCita(cita, numeroDocumentoCliente, "No puedes reprogramar una cita que no te pertenece");
+        validator.validarPermisoGestionCita(cita, numeroDocumentoCliente, "No puedes reprogramar una cita que no te pertenece");
 
         if (cita.getIdEstado() == null || cita.getIdEstado() != ESTADO_ACTIVO) {
             throw new IllegalArgumentException("La cita no está activa o ya fue gestionada");
         }
 
         LocalTime horaFin = request.getHoraFinCita();
-        validarHorarioNegocio(request.getFechaCita(), request.getHoraInicioCita(), horaFin);
+        validator.validarHorarioNegocio(request.getFechaCita(), request.getHoraInicioCita(), horaFin);
 
         List<Cita> conflictos = buscarConflictosExcluyendoCita(
                 cita.getNumeroDocumentoPeluquero(),
@@ -206,10 +170,10 @@ public class CitaAgendamientoService {
 
     @Transactional
     public CitaDTO confirmar(Long noCita, String numeroDocumentoPeluquero) {
-        validarNoCita(noCita);
+        validator.validarNoCita(noCita);
 
         Cita cita = citaRepository.findById(noCita)
-                .orElseThrow(() -> new ResourceNotFoundException("Cita no encontrada para noCita: " + noCita));
+                .orElseThrow(() -> new ResourceNotFoundException(CITA_NO_ENCONTRADA + noCita));
 
         if (!numeroDocumentoPeluquero.equals(cita.getNumeroDocumentoPeluquero())) {
             throw new IllegalArgumentException("No puedes confirmar una cita que no te pertenece");
@@ -221,90 +185,6 @@ public class CitaAgendamientoService {
 
         cita.setCitaConfirmada(true);
         return convertirADTO(citaRepository.save(cita));
-    }
-
-    private void validarSolicitudDisponibilidad(CitaDisponibilidadRequestDTO request) {
-        if (request == null) {
-            throw new IllegalArgumentException("Request es requerido");
-        }
-        if (request.getNumeroDocumentoPeluquero() == null || request.getNumeroDocumentoPeluquero().isBlank()) {
-            throw new IllegalArgumentException("numeroDocumentoPeluquero es requerido");
-        }
-        if (request.getIdServicio() == null) {
-            throw new IllegalArgumentException("idServicio es requerido");
-        }
-        validarFechaYHoras(request.getFechaCita(), request.getHoraInicioCita(), request.getHoraFinCita());
-    }
-
-    private void validarSolicitudAgendamiento(CitaCreateDTO request, String numeroDocumentoCliente) {
-        if (request == null) {
-            throw new IllegalArgumentException("Request es requerido");
-        }
-        if (numeroDocumentoCliente == null || numeroDocumentoCliente.isBlank()) {
-            throw new IllegalArgumentException("numeroDocumentoCliente no encontrado en el token");
-        }
-        if (request.getNumeroDocumentoPeluquero() == null || request.getNumeroDocumentoPeluquero().isBlank()) {
-            throw new IllegalArgumentException("numeroDocumentoPeluquero es requerido");
-        }
-        if (request.getIdServicio() == null) {
-            throw new IllegalArgumentException("idServicio es requerido");
-        }
-        validarFechaYHoras(request.getFechaCita(), request.getHoraInicioCita(), request.getHoraFinCita());
-    }
-
-    private void validarSolicitudReprogramacion(CitaReprogramarDTO request, String numeroDocumentoCliente) {
-        if (request == null) {
-            throw new IllegalArgumentException("Request es requerido");
-        }
-        if (numeroDocumentoCliente == null || numeroDocumentoCliente.isBlank()) {
-            throw new IllegalArgumentException("numeroDocumentoCliente no encontrado en el token");
-        }
-        validarFechaYHoras(request.getFechaCita(), request.getHoraInicioCita(), request.getHoraFinCita());
-    }
-
-    private void validarFechaYHoras(LocalDate fechaCita, LocalTime horaInicio, LocalTime horaFin) {
-        if (fechaCita == null || horaInicio == null || horaFin == null) {
-            throw new IllegalArgumentException("fechaCita, horaInicioCita y horaFinCita son requeridos");
-        }
-    }
-
-    private void validarNoCita(Long noCita) {
-        if (noCita == null) {
-            throw new IllegalArgumentException("noCita es requerido");
-        }
-    }
-
-    private Usuario obtenerClienteActivo(String numeroDocumentoCliente) {
-        Usuario cliente = usuarioRepository.findByNumeroDocumento(numeroDocumentoCliente)
-                .orElseThrow(() -> new ResourceNotFoundException("Cliente no encontrado con documento: " + numeroDocumentoCliente));
-        if (cliente.getIdEstado() != null && cliente.getIdEstado().equals(4)) {
-            throw new IllegalArgumentException("Tu cuenta está bloqueada y no puedes agendar citas");
-        }
-        return cliente;
-    }
-
-    private Usuario obtenerPeluqueroActivo(String numeroDocumentoPeluquero) {
-        Usuario peluquero = usuarioRepository.findByNumeroDocumento(numeroDocumentoPeluquero)
-                .orElseThrow(() -> new ResourceNotFoundException("Barbero no encontrado con documento: " + numeroDocumentoPeluquero));
-        if (!peluquero.getIdRol().equals(2)) {
-            throw new IllegalArgumentException("No es barbero");
-        }
-        if (peluquero.getIdEstado() != null && peluquero.getIdEstado().equals(5)) {
-            throw new IllegalArgumentException("No se puede, el barbero esta deshabilitado");
-        }
-        return peluquero;
-    }
-
-    private void validarPermisoGestionCita(Cita cita, String numeroDocumentoSolicitante, String mensajeError) {
-        if (numeroDocumentoSolicitante == null || numeroDocumentoSolicitante.isBlank()) {
-            throw new IllegalArgumentException("numeroDocumento solicitante no encontrado en el token");
-        }
-
-        boolean esCliente = numeroDocumentoSolicitante.equals(cita.getNumeroDocumentoCliente());
-        boolean esPeluquero = numeroDocumentoSolicitante.equals(cita.getNumeroDocumentoPeluquero());
-        if (!esCliente && !esPeluquero) {
-            throw new IllegalArgumentException(mensajeError);
-        }
     }
 
     private List<Cita> buscarConflictos(String numeroDocumentoPeluquero, LocalDate fechaCita, LocalTime horaInicio, LocalTime horaFin) {

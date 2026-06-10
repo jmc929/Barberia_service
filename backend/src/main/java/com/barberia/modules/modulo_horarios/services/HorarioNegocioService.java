@@ -15,6 +15,8 @@ import java.util.stream.Collectors;
 @Service
 public class HorarioNegocioService {
 
+    private static final String HORARIO_NO_ENCONTRADO = "Horario no encontrado para el día: ";
+
     private final HorarioNegocioRepository horarioNegocioRepository;
 
     public HorarioNegocioService(HorarioNegocioRepository horarioNegocioRepository) {
@@ -30,13 +32,13 @@ public class HorarioNegocioService {
 
     public HorarioNegocioDTO obtenerPorDia(Long idDia) {
         HorarioNegocio horario = horarioNegocioRepository.findByIdDia(idDia)
-                .orElseThrow(() -> new ResourceNotFoundException("Horario no encontrado para el día: " + idDia));
+                .orElseThrow(() -> new ResourceNotFoundException(HORARIO_NO_ENCONTRADO + idDia));
         return convertirADTO(horario);
     }
 
     public HorarioNegocioDTO actualizarHorario(Long idDia, HorarioUpdateDTO dto) {
         HorarioNegocio horario = horarioNegocioRepository.findByIdDia(idDia)
-                .orElseThrow(() -> new ResourceNotFoundException("Horario no encontrado para el día: " + idDia));
+                .orElseThrow(() -> new ResourceNotFoundException(HORARIO_NO_ENCONTRADO + idDia));
 
         if (dto.getHoraApertura() == null || dto.getHoraCierre() == null) {
             throw new IllegalArgumentException("Error: Debe especificar hora de apertura y cierre");
@@ -64,7 +66,7 @@ public class HorarioNegocioService {
 
     public HorarioNegocioDTO cerrarDia(Long idDia) {
         HorarioNegocio horario = horarioNegocioRepository.findByIdDia(idDia)
-                .orElseThrow(() -> new ResourceNotFoundException("Horario no encontrado para el día: " + idDia));
+                .orElseThrow(() -> new ResourceNotFoundException(HORARIO_NO_ENCONTRADO + idDia));
 
         horario.setLocalAbierto(false);
 

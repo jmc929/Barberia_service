@@ -14,6 +14,7 @@ import java.util.stream.Collectors;
 public class ServicioService {
 
     private static final Long ESTADO_ACTIVO = 1L;
+    private static final String SERVICIO_NO_ENCONTRADO = "Servicio no encontrado con id: ";
 
     private final ServicioRepository servicioRepository;
 
@@ -33,7 +34,7 @@ public class ServicioService {
 
     public ServicioDTO obtenerPorId(Long id) {
         Servicio servicio = servicioRepository.findById(id)
-                .orElseThrow(() -> new ResourceNotFoundException("Servicio no encontrado con id: " + id));
+                .orElseThrow(() -> new ResourceNotFoundException(SERVICIO_NO_ENCONTRADO + id));
         return convertirADTO(servicio);
     }
 
@@ -60,9 +61,7 @@ public class ServicioService {
 
     public ServicioDTO actualizar(Long id, ServicioDTO servicioDTO) {
         Servicio servicio = servicioRepository.findById(id)
-                .orElseThrow(() -> new ResourceNotFoundException(
-                        "Servicio no encontrado con id: " + id
-                ));
+                .orElseThrow(() -> new ResourceNotFoundException(SERVICIO_NO_ENCONTRADO + id));
 
         if (servicioDTO.getNombreServicio() != null) {
             servicio.setNombreServicio(servicioDTO.getNombreServicio());
@@ -87,9 +86,7 @@ public class ServicioService {
 
     public void eliminar(Long id) {
         Servicio servicio = servicioRepository.findById(id)
-                .orElseThrow(() -> new ResourceNotFoundException(
-                        "Servicio no encontrado con id: " + id
-                ));
+                .orElseThrow(() -> new ResourceNotFoundException(SERVICIO_NO_ENCONTRADO + id));
 
         if (citaRepository.existsByIdServicioAndIdEstado(id, ESTADO_ACTIVO)) {
             throw new IllegalStateException(
@@ -102,9 +99,7 @@ public class ServicioService {
 
     public ServicioDTO deshabilitar(Long id) {
     Servicio servicio = servicioRepository.findById(id)
-            .orElseThrow(() -> new ResourceNotFoundException(
-                    "Servicio no encontrado con id: " + id
-            ));
+            .orElseThrow(() -> new ResourceNotFoundException(SERVICIO_NO_ENCONTRADO + id));
 
     servicio.setIdEstado(2L);
 

@@ -31,7 +31,7 @@ public class HorarioPeluqueroController {
      */
     @PutMapping("/actualizar")
     @PreAuthorize("hasAuthority('ROLE_2')")
-    public ResponseEntity<?> actualizarHorario(@Valid @RequestBody ActualizarHorarioPeluqueroDTO dto, Authentication authentication) {
+    public ResponseEntity<String> actualizarHorario(@Valid @RequestBody ActualizarHorarioPeluqueroDTO dto, Authentication authentication) {
         String numeroDocumentoPeluquero = obtenerNumeroDocumento(authentication);
         horarioPeluqueroService.actualizarHorario(numeroDocumentoPeluquero, dto);
         return ResponseEntity.ok("Horario actualizado correctamente");

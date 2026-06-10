@@ -1,6 +1,7 @@
 package com.barberia.modules.modulo_usuarios.services;
 
 import com.barberia.modules.modulo_usuarios.models.dtos.RegistroDTO;
+import com.barberia.modules.modulo_usuarios.models.dtos.UpdatePerfilDTO;
 import com.barberia.modules.modulo_usuarios.models.dtos.UsuarioDTO;
 import com.barberia.modules.modulo_usuarios.models.entities.Usuario;
 import com.barberia.modules.modulo_usuarios.repositories.UsuarioRepository;
@@ -17,6 +18,7 @@ public class UsuarioService {
     private final UsuarioRepository usuarioRepository;
 
     private final PasswordEncoder passwordEncoder;
+    private static final String PERSONA_NO_ENCONTRADA = "Persona no encontrada con documento: ";
 
     public UsuarioService(UsuarioRepository usuarioRepository, PasswordEncoder passwordEncoder) {
         this.usuarioRepository = usuarioRepository;
@@ -71,7 +73,7 @@ public class UsuarioService {
      */
     public UsuarioDTO obtenerPorNumeroDocumento(String numeroDocumento) {
         Usuario usuario = usuarioRepository.findByNumeroDocumento(numeroDocumento)
-            .orElseThrow(() -> new ResourceNotFoundException("Persona no encontrada con documento: " + numeroDocumento));
+            .orElseThrow(() -> new ResourceNotFoundException(PERSONA_NO_ENCONTRADA + numeroDocumento));
         return convertirADTO(usuario);
     }
 
@@ -109,7 +111,7 @@ public class UsuarioService {
      */
     public UsuarioDTO cambiarRol(String numeroDocumento, Integer nuevoRol) {
         Usuario usuario = usuarioRepository.findByNumeroDocumento(numeroDocumento)
-            .orElseThrow(() -> new ResourceNotFoundException("Persona no encontrada con documento: " + numeroDocumento));
+            .orElseThrow(() -> new ResourceNotFoundException(PERSONA_NO_ENCONTRADA + numeroDocumento));
 
         usuario.setIdRol(nuevoRol);
         return convertirADTO(usuarioRepository.save(usuario));
@@ -125,7 +127,7 @@ public class UsuarioService {
      */
     public UsuarioDTO bloquearUsuario(String numeroDocumento) {
         Usuario usuario = usuarioRepository.findByNumeroDocumento(numeroDocumento)
-            .orElseThrow(() -> new ResourceNotFoundException("Persona no encontrada con documento: " + numeroDocumento));
+            .orElseThrow(() -> new ResourceNotFoundException(PERSONA_NO_ENCONTRADA + numeroDocumento));
 
         // Validar que sea cliente (rol 3)
         if (!usuario.getIdRol().equals(3)) {
@@ -159,7 +161,7 @@ public class UsuarioService {
      */
     public UsuarioDTO desbloquearUsuario(String numeroDocumento) {
         Usuario usuario = usuarioRepository.findByNumeroDocumento(numeroDocumento)
-            .orElseThrow(() -> new ResourceNotFoundException("Persona no encontrada con documento: " + numeroDocumento));
+            .orElseThrow(() -> new ResourceNotFoundException(PERSONA_NO_ENCONTRADA + numeroDocumento));
 
         // Validar que esté bloqueado (idEstado = 4)
         if (!usuario.getIdEstado().equals(4)) {
@@ -175,7 +177,7 @@ public class UsuarioService {
      * Solo permite actualizar el usuario mismo.
      * Valida que los campos no estén vacíos y que el número de celular tenga formato.
      */
-    public UsuarioDTO actualizarPerfil(String numeroDocumento, com.barberia.modules.modulo_usuarios.models.dtos.UpdatePerfilDTO dto) {
+    public UsuarioDTO actualizarPerfil(String numeroDocumento, UpdatePerfilDTO dto) {
         if (dto == null) {
             throw new IllegalArgumentException("Request es requerido");
         }
@@ -187,57 +189,11 @@ public class UsuarioService {
         Usuario usuario = usuarioRepository.findByNumeroDocumento(numeroDocumento)
             .orElseThrow(() -> new ResourceNotFoundException("Usuario no encontrado con documento: " + numeroDocumento));
 
-        boolean anyUpdated = false;
+        boolean anyUpdated = validarCelular(dto, usuario);
+        anyUpdated = validarEmail(dto, usuario) || anyUpdated;
+        anyUpdated = validarNombre(dto, usuario) || anyUpdated;
 
-        // Si se provee numeroCelular -> validar y setear
-        if (dto.getNumeroCelular() != null && !dto.getNumeroCelular().isBlank()) {
-            String telefono = dto.getNumeroCelular();
-            if (!telefono.matches("^\\+?[0-9]{7,20}$")) {
-                throw new IllegalArgumentException("Numero de celular inválido");
-            }
-            usuario.setNumeroCelular(telefono);
-            anyUpdated = true;
-        }
-
-        // Si se provee email -> validar unico y setear
-        if (dto.getEmail() != null && !dto.getEmail().isBlank()) {
-            String nuevoEmail = dto.getEmail();
-            if (!usuario.getEmail().equalsIgnoreCase(nuevoEmail) && usuarioRepository.existsByEmail(nuevoEmail)) {
-                throw new IllegalArgumentException("El email ya está en uso por otro usuario");
-            }
-            usuario.setEmail(nuevoEmail);
-            anyUpdated = true;
-        }
-
-        // Si se provee nombrePersona -> setear
-        if (dto.getNombrePersona() != null && !dto.getNombrePersona().isBlank()) {
-            usuario.setNombrePersona(dto.getNombrePersona());
-            anyUpdated = true;
-        }
-
-        // Manejo de cambio de contraseña (opcional)
-        String nueva = dto.getNewPassword();
-        if (nueva != null && !nueva.isBlank()) {
-            String actual = dto.getCurrentPassword();
-            if (actual == null || actual.isBlank()) {
-                throw new IllegalArgumentException("Es necesaria la contraseña actual para cambiar la contraseña");
-            }
-
-            // Verificar que la contraseña actual coincida
-            if (!passwordEncoder.matches(actual, usuario.getContrasenaHasheada())) {
-                throw new IllegalArgumentException("Contraseña actual incorrecta");
-            }
-
-            if (nueva.length() < 6) {
-                throw new IllegalArgumentException("La nueva contraseña debe tener al menos 6 caracteres");
-            }
-
-            String confirmar = dto.getConfirmarNuevaPassword();
-            if (confirmar == null || !nueva.equals(confirmar)) {
-                throw new IllegalArgumentException("Las contraseñas nuevas no coinciden");
-            }
-
-            usuario.setContrasenaHasheada(passwordEncoder.encode(nueva));
+        if (manejarCambioContrasena(dto, usuario)) {
             anyUpdated = true;
         }
 
@@ -247,6 +203,66 @@ public class UsuarioService {
 
         Usuario guardado = usuarioRepository.save(usuario);
         return convertirADTO(guardado);
+    }
+
+    private boolean validarCelular(UpdatePerfilDTO dto, Usuario usuario) {
+        if (dto.getNumeroCelular() == null || dto.getNumeroCelular().isBlank()) {
+            return false;
+        }
+        String telefono = dto.getNumeroCelular();
+            if (!telefono.matches("^\\+?\\d{7,20}$")) {
+            throw new IllegalArgumentException("Numero de celular inválido");
+        }
+        usuario.setNumeroCelular(telefono);
+        return true;
+    }
+
+    private boolean validarEmail(UpdatePerfilDTO dto, Usuario usuario) {
+        if (dto.getEmail() == null || dto.getEmail().isBlank()) {
+            return false;
+        }
+        String nuevoEmail = dto.getEmail();
+        if (!usuario.getEmail().equalsIgnoreCase(nuevoEmail) && usuarioRepository.existsByEmail(nuevoEmail)) {
+            throw new IllegalArgumentException("El email ya está en uso por otro usuario");
+        }
+        usuario.setEmail(nuevoEmail);
+        return true;
+    }
+
+    private boolean validarNombre(UpdatePerfilDTO dto, Usuario usuario) {
+        if (dto.getNombrePersona() == null || dto.getNombrePersona().isBlank()) {
+            return false;
+        }
+        usuario.setNombrePersona(dto.getNombrePersona());
+        return true;
+    }
+
+    private boolean manejarCambioContrasena(UpdatePerfilDTO dto, Usuario usuario) {
+        String nueva = dto.getNewPassword();
+        if (nueva == null || nueva.isBlank()) {
+            return false;
+        }
+
+        String actual = dto.getCurrentPassword();
+        if (actual == null || actual.isBlank()) {
+            throw new IllegalArgumentException("Es necesaria la contraseña actual para cambiar la contraseña");
+        }
+
+        if (!passwordEncoder.matches(actual, usuario.getContrasenaHasheada())) {
+            throw new IllegalArgumentException("Contraseña actual incorrecta");
+        }
+
+        if (nueva.length() < 6) {
+            throw new IllegalArgumentException("La nueva contraseña debe tener al menos 6 caracteres");
+        }
+
+        String confirmar = dto.getConfirmarNuevaPassword();
+        if (confirmar == null || !nueva.equals(confirmar)) {
+            throw new IllegalArgumentException("Las contraseñas nuevas no coinciden");
+        }
+
+        usuario.setContrasenaHasheada(passwordEncoder.encode(nueva));
+        return true;
     }
 
     /**
@@ -259,7 +275,7 @@ public class UsuarioService {
      */
     public UsuarioDTO deshabilitarBarbero(String numeroDocumento) {
         Usuario usuario = usuarioRepository.findByNumeroDocumento(numeroDocumento)
-            .orElseThrow(() -> new ResourceNotFoundException("Persona no encontrada con documento: " + numeroDocumento));
+            .orElseThrow(() -> new ResourceNotFoundException(PERSONA_NO_ENCONTRADA + numeroDocumento));
 
         if (!usuario.getIdRol().equals(2)) {
             throw new IllegalArgumentException("No es barbero");
@@ -279,7 +295,7 @@ public class UsuarioService {
      */
     public UsuarioDTO habilitarBarbero(String numeroDocumento) {
         Usuario usuario = usuarioRepository.findByNumeroDocumento(numeroDocumento)
-            .orElseThrow(() -> new ResourceNotFoundException("Persona no encontrada con documento: " + numeroDocumento));
+            .orElseThrow(() -> new ResourceNotFoundException(PERSONA_NO_ENCONTRADA + numeroDocumento));
 
         if (!usuario.getIdRol().equals(2)) {
             throw new IllegalArgumentException("No es barbero");

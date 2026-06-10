@@ -30,7 +30,7 @@ scrape_configs:
   # IMPORTANTE: 'barberia-api' es el nombre del servicio en docker-compose
   # Docker DNS interno resuelve 'barberia-api' al contenedor correcto
   - job_name: 'barberia-api'
-    metrics_path: '/api/actuator/prometheus'
+    metrics_path: '/actuator/prometheus'
     scrape_interval: 15s
     scrape_timeout: 10s
     

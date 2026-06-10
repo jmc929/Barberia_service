@@ -30,20 +30,19 @@ public class AgendaController {
         String numeroDocumento = obtenerNumeroDocumento(authentication);
         List<AgendaResponseDTO> agenda = agendaService.obtenerAgendaPeluquero(numeroDocumento);
 
-        var items = agenda.stream().map(item -> {
-            EntityModel<AgendaResponseDTO> model = EntityModel.of(item,
+        var items = agenda.stream().map(item ->
+            EntityModel.of(item,
                     linkTo(methodOn(AgendaController.class).miAgenda(authentication)).withRel("autorreferencia"),
                     linkTo(methodOn(com.barberia.modules.modulo_citas.controllers.CitaController.class).obtenerPorId(item.getNoCita())).withRel("ver cita")
-            );
-            return model;
-        }).collect(Collectors.toList());
+            )
+        ).collect(Collectors.toList());
 
-        CollectionModel<EntityModel<AgendaResponseDTO>> collection = CollectionModel.of(items,
+        return ResponseEntity.ok(ApiResponse.success("Agenda obtenida",
+            CollectionModel.of(items,
                 linkTo(methodOn(AgendaController.class).miAgenda(authentication)).withRel("autorreferencia"),
                 linkTo(methodOn(com.barberia.modules.modulo_agendamiento.controllers.AgendamientoController.class).agendar(null, authentication)).withRel("crear cita").withType("POST")
-        );
-
-        return ResponseEntity.ok(ApiResponse.success("Agenda obtenida", collection));
+            )
+        ));
     }
 
     private String obtenerNumeroDocumento(Authentication authentication) {

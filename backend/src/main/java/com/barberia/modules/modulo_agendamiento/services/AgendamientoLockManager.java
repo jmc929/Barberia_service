@@ -15,19 +15,19 @@ public class AgendamientoLockManager {
     public LockHandle acquire(String resourceKey) {
         Objects.requireNonNull(resourceKey);
         ReentrantLock lock = locks.computeIfAbsent(resourceKey, k -> new ReentrantLock());
-        lock.lock();
+        lock.lock(); // NOSONAR - lock is released by LockHandle.close()
         return new LockHandle(resourceKey, lock);
     }
 
     public LockHandle tryAcquire(String resourceKey, long timeout, TimeUnit unit) throws InterruptedException {
         Objects.requireNonNull(resourceKey);
         ReentrantLock lock = locks.computeIfAbsent(resourceKey, k -> new ReentrantLock());
-        boolean ok = lock.tryLock(timeout, unit);
+        boolean ok = lock.tryLock(timeout, unit); // NOSONAR - lock is released by LockHandle.close()
         if (!ok) return null;
         return new LockHandle(resourceKey, lock);
     }
 
-    public static class LockHandle implements AutoCloseable {
+    public static final class LockHandle implements AutoCloseable {
         private final String key;
         private final ReentrantLock lock;
 

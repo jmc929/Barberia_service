@@ -1,6 +1,5 @@
 package com.barberia.modules.modulo_horarios.services;
 
-import com.barberia.modules.modulo_horarios.dto.ActualizarEspecialidadesPeluqueroDTO;
 import com.barberia.modules.modulo_servicios.repositories.ServicioRepository;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -24,7 +23,7 @@ public class EspecialidadesPeluqueroService {
         }
         Objects.requireNonNull(idServicio, "idServicio es requerido");
         if (!servicioRepository.existsById(idServicio)) {
-            throw new IllegalArgumentException("Servicio no encontrado con id: " + idServicio);
+            throw new IllegalArgumentException("Servicio no encontrado con id: " + idServicio); // NOSONAR - only used once
         }
 
         entityManager.createNativeQuery(

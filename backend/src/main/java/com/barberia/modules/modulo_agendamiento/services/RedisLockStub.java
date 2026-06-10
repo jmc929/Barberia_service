@@ -13,6 +13,7 @@ public class RedisLockStub {
      * Attempt to acquire a distributed lock. Currently a stub that always returns false.
      * Implement with a Redis SET NX + TTL or Redisson RLock in production.
      */
+    @SuppressWarnings("java:S1172")
     public boolean acquire(String key, long ttlMillis) {
         // TODO: integrate Redis client
         return false;

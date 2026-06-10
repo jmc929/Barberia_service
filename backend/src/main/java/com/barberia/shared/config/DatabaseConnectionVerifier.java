@@ -1,5 +1,7 @@
 package com.barberia.shared.config;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.boot.CommandLineRunner;
 import org.springframework.stereotype.Component;
 import javax.sql.DataSource;
@@ -7,6 +9,8 @@ import java.sql.Connection;
 
 @Component
 public class DatabaseConnectionVerifier implements CommandLineRunner {
+
+    private static final Logger log = LoggerFactory.getLogger(DatabaseConnectionVerifier.class);
 
     private final DataSource dataSource;
 
@@ -17,20 +21,16 @@ public class DatabaseConnectionVerifier implements CommandLineRunner {
     @Override
     public void run(String... args) throws Exception {
         try (Connection connection = dataSource.getConnection()) {
-            if (connection != null && !connection.isClosed()) {
-                System.out.println("\n✅ ============================================");
-                System.out.println("✅ CONEXIÓN A LA BASE DE DATOS ESTABLECIDA CORRECTAMENTE");
-                System.out.println("✅ URL: " + connection.getMetaData().getURL());
-                System.out.println("✅ Usuario: " + connection.getMetaData().getUserName());
-                System.out.println("✅ Driver: " + connection.getMetaData().getDriverName());
-                System.out.println("✅ ============================================\n");
+            if (connection != null && !connection.isClosed() && log.isInfoEnabled()) {
+                log.info("Conexion a la base de datos establecida correctamente");
+                log.info("URL: {}", connection.getMetaData().getURL());
+                log.info("Usuario: {}", connection.getMetaData().getUserName());
+                log.info("Driver: {}", connection.getMetaData().getDriverName());
             }
         } catch (Exception e) {
-            System.err.println("\n❌ ============================================");
-            System.err.println("❌ ERROR EN LA CONEXIÓN A LA BASE DE DATOS");
-            System.err.println("❌ Mensaje: " + e.getMessage());
-            System.err.println("❌ ============================================\n");
-            // No lanzamos la excepción para permitir que la app continúe
+            if (log.isErrorEnabled()) {
+                log.error("Error en la conexion a la base de datos: {}", e.getMessage());
+            }
         }
     }
 }
